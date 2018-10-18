@@ -1,0 +1,7 @@
+참고
+https://www.arduino.cc/en/Reference/Wire
+
+
+https://github.com/semaf/MFRC522_I2C_Library/blob/master/examples/mfrc522_i2c/MFRC522_i2c.ino
+해당 소스로 돌려봤는데 실행 안됨
+
