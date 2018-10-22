@@ -1,7 +1,11 @@
 
 #include <SPI.h>
-#include <MFRC522.h>
+//#include <MFRC522.h>
 #include <EtherCard.h>
+
+#include <Wire.h>
+#include <MFRC522_I2C.h>
+
 
 // ethernet interface mac address, must be unique on the LAN
 static byte mymac[] = { 0x74,0x69,0x69,0x2D,0x30,0x31 };
@@ -21,23 +25,14 @@ Stash stash;
 
 const char website[] PROGMEM = "www.flysys.kr";
 
-//#define SS_PIN 8
-
-#define SS_PIN 10
+#define SDA_PIN 18
+#define SCL_PIN 19
 #define RST_PIN 9
-
+#define SS_PIN 10
+MFRC522 mfrc522(0x28, RST_PIN);  // Create MFRC522 instance.
 MFRC522 rfid(SS_PIN, RST_PIN); // Instance of the class
 MFRC522::MIFARE_Key key; 
 byte nuidPICC[4];
-
-
-// called when the client request is complete
-static void my_callback (byte status, word off, word len) {
-  Serial.println(">>>");
-  Ethernet::buffer[off+300] = 0;
-  Serial.print((const char*) Ethernet::buffer + off);
-  Serial.println("...");
-}
 
 void setup () 
 {
@@ -45,7 +40,7 @@ void setup ()
 
   //Enc28j60_setup () ;
 
-  MFRC522_setup() ;
+  MFRC522_i2c_setup() ;
  
 }
 
@@ -80,12 +75,67 @@ void loop ()
   {
     rfid_timer = millis() + 500;
 
-    MFRC522_ReadNUID_test();
+    //MFRC522_spi_ReadNUID_test();
+    //MFRC522_i2c_loop_test();
 
   }
 
 }
 
+void MFRC522_i2c_setup() 
+{
+  Serial.println(F("\n[MFRC522_i2c_setup]"));
+  //Wire.begin(SDA_PIN, SCL_PIN); // Initialize I2C
+  Wire.begin(); // Initialize I2C
+  mfrc522.PCD_Init();   // Init MFRC522
+  ShowReaderDetails();  // Show details of PCD - MFRC522 Card Reader details
+  Serial.println(F("Scan PICC to see UID, type, and data blocks..."));
+}
+void MFRC522_i2c_loop_test() 
+{
+  // Look for new cards
+  if ( ! mfrc522.PICC_IsNewCardPresent()) 
+  {
+    return;
+  }
+
+  // Select one of the cards
+  if ( ! mfrc522.PICC_ReadCardSerial())
+  {
+    return;
+  }
+
+  // Dump debug info about the card; PICC_HaltA() is automatically called
+  mfrc522.PICC_DumpToSerial(&(mfrc522.uid));
+}
+void ShowReaderDetails() 
+{
+  // Get the MFRC522 software version
+  byte v = mfrc522.PCD_ReadRegister(mfrc522.VersionReg);
+  Serial.print(F("MFRC522 Software Version: 0x"));
+  Serial.print(v, HEX);
+  if (v == 0x91)
+    Serial.print(F(" = v1.0"));
+  else if (v == 0x92)
+    Serial.print(F(" = v2.0"));
+  else
+    Serial.print(F(" (unknown)"));
+  Serial.println("");
+  // When 0x00 or 0xFF is returned, communication probably failed
+  if ((v == 0x00) || (v == 0xFF)) {
+    Serial.println(F("WARNING: Communication failure, is the MFRC522 properly connected?"));
+  }
+}
+
+
+
+// called when the client request is complete
+static void my_callback (byte status, word off, word len) {
+  Serial.println(">>>");
+  Ethernet::buffer[off+300] = 0;
+  Serial.print((const char*) Ethernet::buffer + off);
+  Serial.println("...");
+}
 void Enc28j60_setup () 
 {
    Serial.println(F("\n[Enc28j60_setup]"));
@@ -112,7 +162,7 @@ void Enc28j60_setup ()
   ether.printIp("SRV: ", ether.hisip);
  }
 
-void sendToWebServer(int source)
+void Enc28j60_sendToWebServer(int source)
 {
     if (source == 0)
     {
@@ -142,7 +192,7 @@ void sendToWebServer(int source)
 
 }
 
-void MFRC522_setup() 
+void MFRC522_spi_setup() 
 { 
   Serial.println(F("\n[MFRC522_setup]"));
   SPI.begin(); // Init SPI bus
@@ -157,10 +207,9 @@ void MFRC522_setup()
   printHex(key.keyByte, MFRC522::MF_KEY_SIZE);
 }
 
-void MFRC522_ReadNUID_test() 
+void MFRC522_spi_ReadNUID_test() 
 {
 //Serial.println(F("\n[MFRC522_loop]")); 
-
 
   // Look for new cards
   if ( ! rfid.PICC_IsNewCardPresent())
