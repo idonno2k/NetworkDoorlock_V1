@@ -1,11 +1,16 @@
 
 #include <SPI.h>
-//#include <MFRC522.h>
 #include <EtherCard.h>
 
 #include <Wire.h>
-#include <MFRC522_I2C.h>
+#include <Adafruit_NFCShield_I2C.h>
 
+#include "Sd2Card.h"
+
+#define IRQ   (2)
+#define RESET (3)  // Not connected by default on the NFC Shield
+
+Adafruit_NFCShield_I2C nfc(IRQ, RESET);
 
 // ethernet interface mac address, must be unique on the LAN
 static byte mymac[] = { 0x74,0x69,0x69,0x2D,0x30,0x31 };
@@ -15,7 +20,7 @@ static byte dnsip[] = { 8, 8, 8, 8 };
 static byte maskip[] = { 255, 255, 255, 0 };
 static byte hisip[] = { 10, 0, 1, 96 };
 
-#define BUFFER_SIZE 700
+#define BUFFER_SIZE 100
 
 byte Ethernet::buffer[BUFFER_SIZE];
 static uint32_t ethernet_timer;
@@ -29,26 +34,26 @@ const char website[] PROGMEM = "www.flysys.kr";
 #define SCL_PIN 19
 #define RST_PIN 9
 #define SS_PIN 10
-MFRC522 mfrc522(0x28, RST_PIN);  // Create MFRC522 instance.
-MFRC522 rfid(SS_PIN, RST_PIN); // Instance of the class
-MFRC522::MIFARE_Key key; 
+
 byte nuidPICC[4];
 
 void setup () 
 {
   Serial.begin(57600);
 
-  //Enc28j60_setup () ;
+  Enc28j60_setup () ;
 
-  MFRC522_i2c_setup() ;
+  PN532_i2c_setup() ;
+
+  delay(1000);
  
 }
 
 void loop () 
 {
-  uint16_t payloadPos = ether.packetLoop(ether.packetReceive());
+ // uint16_t payloadPos = ether.packetLoop(ether.packetReceive());
 
-  if (payloadPos)
+/*  if (payloadPos)
   {
     char* incomingData = (char *) Ethernet::buffer + payloadPos;
     Serial.println(incomingData);
@@ -58,7 +63,7 @@ void loop ()
    //   sz=sizeof(page);
    // memcpy_P(Ethernet::buffer + payloadPos, page, sz); // Copy data from flash to RAM
    // ether.httpServerReply(sz-1);
-  }
+  }*/
 
   //===============================================================
   //ethernet loop 5000ms
@@ -66,7 +71,7 @@ void loop ()
   {
     ethernet_timer = millis() + 5000;
 
-   // sendToWebServer(0);
+    Enc28j60_sendToWebServer(0);
 
   }
   //===============================================================
@@ -75,57 +80,13 @@ void loop ()
   {
     rfid_timer = millis() + 500;
 
-    //MFRC522_spi_ReadNUID_test();
-    //MFRC522_i2c_loop_test();
+    Serial.println(".");
+   PN532_i2c_loop(); 
 
   }
 
 }
 
-void MFRC522_i2c_setup() 
-{
-  Serial.println(F("\n[MFRC522_i2c_setup]"));
-  //Wire.begin(SDA_PIN, SCL_PIN); // Initialize I2C
-  Wire.begin(); // Initialize I2C
-  mfrc522.PCD_Init();   // Init MFRC522
-  ShowReaderDetails();  // Show details of PCD - MFRC522 Card Reader details
-  Serial.println(F("Scan PICC to see UID, type, and data blocks..."));
-}
-void MFRC522_i2c_loop_test() 
-{
-  // Look for new cards
-  if ( ! mfrc522.PICC_IsNewCardPresent()) 
-  {
-    return;
-  }
-
-  // Select one of the cards
-  if ( ! mfrc522.PICC_ReadCardSerial())
-  {
-    return;
-  }
-
-  // Dump debug info about the card; PICC_HaltA() is automatically called
-  mfrc522.PICC_DumpToSerial(&(mfrc522.uid));
-}
-void ShowReaderDetails() 
-{
-  // Get the MFRC522 software version
-  byte v = mfrc522.PCD_ReadRegister(mfrc522.VersionReg);
-  Serial.print(F("MFRC522 Software Version: 0x"));
-  Serial.print(v, HEX);
-  if (v == 0x91)
-    Serial.print(F(" = v1.0"));
-  else if (v == 0x92)
-    Serial.print(F(" = v2.0"));
-  else
-    Serial.print(F(" (unknown)"));
-  Serial.println("");
-  // When 0x00 or 0xFF is returned, communication probably failed
-  if ((v == 0x00) || (v == 0xFF)) {
-    Serial.println(F("WARNING: Communication failure, is the MFRC522 properly connected?"));
-  }
-}
 
 
 
@@ -192,90 +153,63 @@ void Enc28j60_sendToWebServer(int source)
 
 }
 
-void MFRC522_spi_setup() 
-{ 
-  Serial.println(F("\n[MFRC522_setup]"));
-  SPI.begin(); // Init SPI bus
-  rfid.PCD_Init(); // Init MFRC522 
 
-  for (byte i = 0; i < 6; i++) {
-    key.keyByte[i] = 0xFF;
-  }
-
-  Serial.println(F("This code scan the MIFARE Classsic NUID."));
-  Serial.print(F("Using the following key:"));
-  printHex(key.keyByte, MFRC522::MF_KEY_SIZE);
-}
-
-void MFRC522_spi_ReadNUID_test() 
+void PN532_i2c_setup(void) 
 {
-//Serial.println(F("\n[MFRC522_loop]")); 
 
-  // Look for new cards
-  if ( ! rfid.PICC_IsNewCardPresent())
-    return;
+  Serial.println("PN532_i2c_setup...");
 
-  // Verify if the NUID has been readed
-  if ( ! rfid.PICC_ReadCardSerial())
-    return;
+  nfc.begin();
 
-  Serial.print(F("PICC type: "));
-  MFRC522::PICC_Type piccType = rfid.PICC_GetType(rfid.uid.sak);
-  Serial.println(rfid.PICC_GetTypeName(piccType));
-
-  // Check is the PICC of Classic MIFARE type
-  if (piccType != MFRC522::PICC_TYPE_MIFARE_MINI &&  
-    piccType != MFRC522::PICC_TYPE_MIFARE_1K &&
-    piccType != MFRC522::PICC_TYPE_MIFARE_4K) {
-    Serial.println(F("Your tag is not of type MIFARE Classic."));
-    return;
+  uint32_t versiondata = nfc.getFirmwareVersion();
+  if (! versiondata) {
+    Serial.print("Didn't find PN53x board");
+    while (1); // halt
   }
+  
+  // Got ok data, print it out!
+  Serial.print("Found chip PN5"); Serial.println((versiondata>>24) & 0xFF, HEX); 
+  Serial.print("Firmware ver. "); Serial.print((versiondata>>16) & 0xFF, DEC); 
+  Serial.print('.'); Serial.println((versiondata>>8) & 0xFF, DEC);
+  
+  // Set the max number of retry attempts to read from a card
+  // This prevents us from waiting forever for a card, which is
+  // the default behaviour of the PN532.
+  nfc.setPassiveActivationRetries(0xFF);
+  
+  // configure board to read RFID tags
+  nfc.SAMConfig();
+    
+  Serial.println("Waiting for an ISO14443A card");
+}
 
-  if (rfid.uid.uidByte[0] != nuidPICC[0] || 
-    rfid.uid.uidByte[1] != nuidPICC[1] || 
-    rfid.uid.uidByte[2] != nuidPICC[2] || 
-    rfid.uid.uidByte[3] != nuidPICC[3] ) {
-    Serial.println(F("A new card has been detected."));
 
-    // Store NUID into nuidPICC array
-    for (byte i = 0; i < 4; i++) {
-      nuidPICC[i] = rfid.uid.uidByte[i];
+void PN532_i2c_loop(void) 
+{
+  boolean success;
+  uint8_t uid[] = { 0, 0, 0, 0, 0, 0, 0 };  // Buffer to store the returned UID
+  uint8_t uidLength;                        // Length of the UID (4 or 7 bytes depending on ISO14443A card type)
+  
+  // Wait for an ISO14443A type cards (Mifare, etc.).  When one is found
+  // 'uid' will be populated with the UID, and uidLength will indicate
+  // if the uid is 4 bytes (Mifare Classic) or 7 bytes (Mifare Ultralight)
+  success = nfc.readPassiveTargetID(PN532_MIFARE_ISO14443A, &uid[0], &uidLength);
+  
+  if (success) {
+    Serial.println("Found a card!");
+    Serial.print("UID Length: ");Serial.print(uidLength, DEC);Serial.println(" bytes");
+    Serial.print("UID Value: ");
+    for (uint8_t i=0; i < uidLength; i++) 
+    {
+      Serial.print(" 0x");Serial.print(uid[i], HEX); 
     }
-   
-    Serial.println(F("The NUID tag is:"));
-    Serial.print(F("In hex: "));
-    printHex(rfid.uid.uidByte, rfid.uid.size);
-    Serial.println();
-    Serial.print(F("In dec: "));
-    printDec(rfid.uid.uidByte, rfid.uid.size);
-    Serial.println();
+    Serial.println("");
+    // Wait 1 second before continuing
+    delay(1000);
   }
-  else Serial.println(F("Card read previously."));
-
-  // Halt PICC
-  rfid.PICC_HaltA();
-
-  // Stop encryption on PCD
-  rfid.PCD_StopCrypto1();
-}
-
-
-/**
- * Helper routine to dump a byte array as hex values to Serial. 
- */
-void printHex(byte *buffer, byte bufferSize) {
-  for (byte i = 0; i < bufferSize; i++) {
-    Serial.print(buffer[i] < 0x10 ? " 0" : " ");
-    Serial.print(buffer[i], HEX);
-  }
-}
-
-/**
- * Helper routine to dump a byte array as dec values to Serial.
- */
-void printDec(byte *buffer, byte bufferSize) {
-  for (byte i = 0; i < bufferSize; i++) {
-    Serial.print(buffer[i] < 0x10 ? " 0" : " ");
-    Serial.print(buffer[i], DEC);
+  else
+  {
+    // PN532 probably timed out waiting for a card
+    Serial.println("Timed out waiting for a card");
   }
 }
