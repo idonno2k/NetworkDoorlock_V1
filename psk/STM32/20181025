@@ -1,0 +1,15 @@
+아두이노 설치 경로의 \hardware\Arduino_STM32\tools\win 폴더에
+Bluepill_boot.bat 와 generic_boot20_pc13.bin 복사
+
+시리얼의 Rx, Tx 핀에 A9, A10 과 GND , VCC 연결
+컴퓨터에 연결된 시리얼 포트를 확인 후 
+Bluepill_boot.bat 파일을 열어서 시리얼포트 수정 후 실행
+
+보드의 부트 점퍼 변경 -> 리셋 -> Bluepill_boot.bat 실행 -> 부트로더 업로드 완료 -> 부트점퍼 복구
+
+참고사이트 : https://blog.naver.com/elecraft/220970446465
+
+
+보드의 usb드라이버가 설치는 안됨..
+
+부트로더 업로드 방식대로 시리얼 이용과 부트점퍼 변경으로 업로드는 가능한듯..
