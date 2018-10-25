@@ -1,0 +1,1 @@
+stm32flash.exe -w generic_boot20_pc13.bin COM8
