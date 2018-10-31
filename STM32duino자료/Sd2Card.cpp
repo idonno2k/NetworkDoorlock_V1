@@ -25,14 +25,14 @@
 #ifdef USE_SPI_LIB
 
 #ifndef SDCARD_SPI
-#define SDCARD_SPI SPI
+#define SDCARD_SPI SPI_2
 #endif
 
 #include <SPI.h>
 static SPISettings settings;
 
 #define SPI_NSS_PIN PB12
-SPICLASS SPI_2(2)
+SPIClass SPI_2(2);
 
 
 #endif
