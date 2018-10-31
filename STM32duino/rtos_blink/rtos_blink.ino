@@ -1,3 +1,6 @@
+
+#include <Wire.h>
+#include <Adafruit_NFCShield_I2C.h>
 #include <SD.h>
 
 #define SDCARD_SS_PIN PB12
@@ -8,6 +11,7 @@
 //#include <wirish/wirish.h>
 //#include "libraries/FreeRTOS/MapleFreeRTOS.h"
 #include <MapleFreeRTOS900.h>
+
 
 
 static void vLEDFlashTask(void *pvParameters) 

@@ -1,0 +1,4 @@
+C:\Program Files (x86)\Arduino\libraries\SD\src\utility
+:sd2card.h 를 여기로복사해야함
+
+pn532는\Documents\Arduino\library로 직접 복사해야함
