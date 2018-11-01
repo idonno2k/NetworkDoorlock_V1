@@ -76,7 +76,7 @@ static void vPN532Serial3Task(void *pvParameters)
   if (! versiondata) 
   {
       Serial.print("Didn't find PN53x board");
-      while (1); // halt
+      while (1)vTaskDelay(5000); // halt
   }
  
   // Got ok data, print it out!
@@ -175,7 +175,7 @@ static void vEnc28j60spi1Task(void *pvParameters)
   vTaskDelay(4000); 
   Serial.println(F("Enc28j60 spi1 Task..."));
     // Change 'SS' to your Slave Select pin, if you arn't using the default pin
-  if (ether.begin(sizeof Ethernet::buffer, mymac, SS) == 0)
+  if (ether.begin(sizeof Ethernet::buffer, mymac, PA2) == 0)
     Serial.println(F("Failed to access Ethernet controller"));
 
   //static setup
@@ -216,7 +216,7 @@ static void vSDCardSpi2ReadTask(void *pvParameters)
     Serial.println(F("* is a card inserted?"));
     Serial.println(F("* is your wiring correct?"));
     Serial.println(F("* did you change the chipSelect pin to match your shield or module?"));
-    while (1);
+    while (1)vTaskDelay(5000);;
   } 
   else 
   {
@@ -286,9 +286,9 @@ void setup()
     xEventGroup = xEventGroupCreate();
 
    xTaskCreate(vBoardAliveLEDTask,"Task1", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 2,  NULL);
-   xTaskCreate(vSDCardSpi2ReadTask,"Task2", configMINIMAL_STACK_SIZE + 100, NULL, tskIDLE_PRIORITY + 2,  NULL);
-   xTaskCreate(vPN532Serial3Task,"Task3", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 2,  NULL);
-   xTaskCreate(vEnc28j60spi1Task,"Task4", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 2,  NULL);
+   xTaskCreate(vSDCardSpi2ReadTask,"Task2", configMINIMAL_STACK_SIZE + 100, NULL, tskIDLE_PRIORITY + 4,  NULL);
+   xTaskCreate(vPN532Serial3Task,"Task3", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1,  NULL);
+   xTaskCreate(vEnc28j60spi1Task,"Task4", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 3,  NULL);
 
     vTaskStartScheduler();
 }

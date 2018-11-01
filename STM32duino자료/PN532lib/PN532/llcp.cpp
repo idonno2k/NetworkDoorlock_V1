@@ -266,7 +266,7 @@ bool LLCP::write(const uint8_t *header, uint8_t hlen, const uint8_t *body, uint8
 int16_t LLCP::read(uint8_t *buf, uint8_t length)
 {
     uint8_t type;
-    int16_t status;
+    uint16_t status;
 
     // Get INFO PDU
     do {
