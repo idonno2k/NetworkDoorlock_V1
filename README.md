@@ -17,3 +17,8 @@ arduino nano v3에서 stm32f103 bluepill 보드로 변경후 중간결과
 3. PN532를 serial3을 이용하여 동작확인 -> I2C와 결선은 동일 코드만 수정됨
 4. SDcard를 spi2를 이용하여 동작확인 -> SD 라이브러리 수정이 있었음
 5. os event를 사용하여 uid 인식시 sdcard를 읽도록 수정후 동작확인
+
+2018-11-05
+SPI포트변경
+....AppData\Local\Arduino15\packages\stm32duino\hardware\STM32F1\2018.9.24\variants\generic_stm32f103c\board
+board.h를 첨부된 파일로 덮어씌우기 할 것...

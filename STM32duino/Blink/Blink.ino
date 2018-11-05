@@ -1,37 +1,79 @@
-/*
-  Blink
+#include <SPI.h>
+#include <EtherCard_STM.h>
 
-  Turns an LED on for one second, then off for one second, repeatedly.
+static byte mymac[] = { 0x74,0x69,0x69,0x2D,0x30,0x31 };
+#define BUFFER_SIZE 700
+byte Ethernet::buffer[BUFFER_SIZE];
+Stash stash;
+//const char website[] PROGMEM = "www.flysys.kr";
+const char website[] PROGMEM = "body.ibuild.kr";
 
-  Most Arduinos have an on-board LED you can control. On the UNO, MEGA and ZERO
-  it is attached to digital pin 13, on MKR1000 on pin 6. LED_BUILTIN is set to
-  the correct LED pin independent of which board is used.
-  If you want to know what pin the on-board LED is connected to on your Arduino
-  model, check the Technical Specs of your board at:
-  https://www.arduino.cc/en/Main/Products
+static uint32_t ethernet_timer;
+static uint32_t rfid_timer;
 
-  modified 8 May 2014
-  by Scott Fitzgerald
-  modified 2 Sep 2016
-  by Arturo Guadalupi
-  modified 8 Sep 2016
-  by Colby Newman
 
-  This example code is in the public domain.
+// called when the client request is complete
+static void my_callback (byte status, uint16_t off, uint16_t len) {
+  Serial.println(">>>");
+  Ethernet::buffer[off+300] = 0;
+  Serial.print((const char*) Ethernet::buffer + off);
+  Serial.println("...");
+}
+void vEnc28j60spi1_setup(void) 
+{
+  Serial.println(F("Enc28j60 spi1 Task..."));
+    // Change 'SS' to your Slave Select pin, if you arn't using the default pin
 
-  http://www.arduino.cc/en/Tutorial/Blink
-*/
+afio_cfg_debug_ports(AFIO_DEBUG_SW_ONLY); // release PB3 and PB5 
+afio_remap(AFIO_REMAP_SPI1); // remap SPI1
+  if (ether.begin(sizeof Ethernet::buffer, mymac,PA15) == 0)
+    Serial.println(F("Failed to access Ethernet controller"));
+
+  //static setup
+  //if (!ether.staticSetup(myip, gwip, dnsip, maskip))
+  //    Serial.println("static setup failed");
+    
+  if (!ether.dhcpSetup())
+    Serial.println(F("DHCP failed"));
+
+  ether.printIp("IP:  ", ether.myip);
+  ether.printIp("GW:  ", ether.gwip);
+  ether.printIp("DNS: ", ether.dnsip);
+
+  // use DNS to resolve the website's IP address
+  if (!ether.dnsLookup(website))
+    Serial.println("DNS failed");
+
+  ether.printIp("SRV: ", ether.hisip);
+}
 
 // the setup function runs once when you press reset or power the board
-void setup() {
-  // initialize digital pin LED_BUILTIN as an output.
+void setup() 
+{
+     Serial.begin(115200);
+   Serial.println(F("Generic STM32F103C8 with bootloader...\r\n"));
+
   pinMode(PC13, OUTPUT);
+
+  vEnc28j60spi1_setup(); 
 }
 
 // the loop function runs over and over again forever
-void loop() {
-  digitalWrite(PC13, HIGH);   // turn the LED on (HIGH is the voltage level)
-  delay(1000);                       // wait for a second
-  digitalWrite(PC13, LOW);    // turn the LED off by making the voltage LOW
-  delay(1000);                       // wait for a second
+void loop() 
+{
+  //===============================================================
+  //ethernet loop 5000ms
+  ether.packetLoop(ether.packetReceive());
+  if (millis() > ethernet_timer) 
+  {
+    ethernet_timer = millis() + 5000;
+    ether.browseUrl(PSTR("/door_control/sync.php"),"", website, my_callback);
+  }
+  //===============================================================
+  //rfid loop 500ms
+  if (millis() > rfid_timer) 
+  {
+    rfid_timer = millis() + 500;
+
+  }                 // wait for a second
 }

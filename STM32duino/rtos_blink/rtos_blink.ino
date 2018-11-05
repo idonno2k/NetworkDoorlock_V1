@@ -3,24 +3,11 @@
 #include <MapleFreeRTOS900.h>
 #include "utility/event_groups.h"
 
+#define DEBUG
+
+#include <SPI.h>
 #include <SD.h>
 
-#if 0
-#include <Wire.h>
-#include <Adafruit_PN532.h>
-#define PN532_IRQ   PB1
-#define PN532_RESET PB0  // Not connected by default on the NFC Shield
-
-Adafruit_PN532 nfc(PN532_IRQ, PN532_RESET);
-
-#else
-
-//#include <PN532_I2C.h>
-//#include <PN532.h>
-// #include <NfcAdapter.h>
-
-//PN532_I2C pn532i2c(Wire);
-//PN532 nfc(pn532i2c);
 
 #include <PN532_HSU.h>
 #include <PN532.h>
@@ -28,22 +15,17 @@ Adafruit_PN532 nfc(PN532_IRQ, PN532_RESET);
 PN532_HSU pn532hsu(Serial3);
 PN532 nfc(pn532hsu);
 
-#endif
 
 #include <EtherCard_STM.h>
 
 // ethernet interface mac address, must be unique on the LAN
 static byte mymac[] = { 0x74,0x69,0x69,0x2D,0x30,0x31 };
-static byte myip[] = { 10, 0, 1, 95 };
-static byte gwip[] = { 10, 0, 1, 1 };
-static byte dnsip[] = { 8, 8, 8, 8 };
-static byte maskip[] = { 255, 255, 255, 0 };
-static byte hisip[] = { 10, 0, 1, 96 };
 
 #define BUFFER_SIZE 700
 byte Ethernet::buffer[BUFFER_SIZE];
 Stash stash;
-const char website[] PROGMEM = "www.flysys.kr";
+const char website[] PROGMEM = "body.ibuild.kr";
+static uint32_t ethernet_timer;
 
 #define RFID_DONE ( 1 << 0 )
 EventGroupHandle_t xEventGroup;
@@ -51,12 +33,12 @@ EventBits_t uxBits;
 
 static void vBoardAliveLEDTask(void *pvParameters) 
 {
+  vTaskDelay(4000);  
   pinMode(PC13, OUTPUT);
-  
-  vTaskDelay(3000); 
-  
+
+  #ifdef DEBUG
   Serial.println(F("BoardAlive!! -> STM32F103C(72Mhz/20kRAM/64k Flash) "));
-  
+  #endif
   for (;;) 
   {
     vTaskDelay(850);      digitalWrite(PC13, LOW);
@@ -68,9 +50,10 @@ static void vBoardAliveLEDTask(void *pvParameters)
 
 static void vPN532Serial3Task(void *pvParameters) 
 {
-  vTaskDelay(1000);
+  vTaskDelay(3000);
+  #ifdef DEBUG
   Serial.println("PN532_serial3_setup...");
-  
+  #endif
   nfc.begin();
   uint32_t versiondata = nfc.getFirmwareVersion();
   if (! versiondata) 
@@ -80,10 +63,11 @@ static void vPN532Serial3Task(void *pvParameters)
   }
  
   // Got ok data, print it out!
+  #ifdef DEBUG
   Serial.print("Found chip PN5"); Serial.println((versiondata>>24) & 0xFF, HEX); 
   Serial.print("Firmware ver. "); Serial.print((versiondata>>16) & 0xFF, DEC); 
   Serial.print('.'); Serial.println((versiondata>>8) & 0xFF, DEC);
-  
+  #endif
   // Set the max number of retry attempts to read from a card
   // This prevents us from waiting forever for a card, which is
   // the default behaviour of the PN532.
@@ -91,9 +75,9 @@ static void vPN532Serial3Task(void *pvParameters)
   
   // configure board to read RFID tags
   nfc.SAMConfig();
-    
+  #ifdef DEBUG
   Serial.println("Waiting for an ISO14443A card");
- 
+  #endif
   for (;;) 
   {
     
@@ -108,6 +92,7 @@ static void vPN532Serial3Task(void *pvParameters)
   
     if (success) 
     {
+      #ifdef DEBUG
       Serial.println("Found a card!");
       Serial.print("UID Length: ");Serial.print(uidLength, DEC);Serial.println(" bytes");
       Serial.print("UID Value: ");
@@ -116,7 +101,7 @@ static void vPN532Serial3Task(void *pvParameters)
         Serial.print(" 0x");Serial.print(uid[i], HEX); 
       }
       Serial.println("");
-
+      #endif
       /* Set bit 0 and bit 4 in xEventGroup. */
       uxBits = xEventGroupSetBits( xEventGroup, RFID_DONE );/* The bits being set. */
       
@@ -125,15 +110,19 @@ static void vPN532Serial3Task(void *pvParameters)
     }
     else
     {
+      #ifdef DEBUG
       // PN532 probably timed out waiting for a card
       //Serial.println("Timed out waiting for a card");
+      #endif
     }
     
   }
 }
 
+
 // called when the client request is complete
-static void my_callback (byte status, word off, word len) {
+static void my_callback (byte status, uint16_t off, uint16_t len) 
+{
   Serial.println(">>>");
   Ethernet::buffer[off+300] = 0;
   Serial.print((const char*) Ethernet::buffer + off);
@@ -144,8 +133,9 @@ void Enc28j60_sendToWebServer(int source)
 {
     if (source == 0)
     {
+      #ifdef DEBUG
         Serial.println("Sending POST Source");
-
+      #endif
         byte sd = stash.create();
         stash.print("uid=");
         stash.println((word) millis() / 123);
@@ -163,8 +153,10 @@ void Enc28j60_sendToWebServer(int source)
     }
     else 
     {
+      #ifdef DEBUG
         Serial.println("Sending GET Source");
-       //ether.browseUrl(PSTR("/curl/test.php"), "?uid=55&var2=10&var3=100", website, my_callback);
+      #endif
+       // ether.browseUrl(PSTR("/curl/test.php"), "?uid=55&var2=10&var3=100", website, my_callback);
 
     }
 
@@ -172,22 +164,36 @@ void Enc28j60_sendToWebServer(int source)
 
 static void vEnc28j60spi1Task(void *pvParameters) 
 {
-  vTaskDelay(4000); 
+vTaskDelay(2000);  
+  
+  #ifdef DEBUG
   Serial.println(F("Enc28j60 spi1 Task..."));
-    // Change 'SS' to your Slave Select pin, if you arn't using the default pin
-  if (ether.begin(sizeof Ethernet::buffer, mymac, PA2) == 0)
+  #endif
+
+  afio_cfg_debug_ports(AFIO_DEBUG_SW_ONLY); // release PB3 and PB5 
+  afio_remap(AFIO_REMAP_SPI1); // remap SPI1
+  if (ether.begin(sizeof Ethernet::buffer, mymac,PA15) == 0)
+  {
+    #ifdef DEBUG
     Serial.println(F("Failed to access Ethernet controller"));
+    #endif
+  }
 
   //static setup
   //if (!ether.staticSetup(myip, gwip, dnsip, maskip))
   //    Serial.println("static setup failed");
     
   if (!ether.dhcpSetup())
+  {
+    #ifdef DEBUG
     Serial.println(F("DHCP failed"));
-
+    #endif
+  }
+  #ifdef DEBUG
   ether.printIp("IP:  ", ether.myip);
   ether.printIp("GW:  ", ether.gwip);
   ether.printIp("DNS: ", ether.dnsip);
+  #endif
 
   // use DNS to resolve the website's IP address
   if (!ether.dnsLookup(website))
@@ -197,8 +203,13 @@ static void vEnc28j60spi1Task(void *pvParameters)
   
   for (;;) 
   {
-    Enc28j60_sendToWebServer(0);
-    vTaskDelay(5000);  
+    ether.packetLoop(ether.packetReceive());
+    if (millis() > ethernet_timer) 
+    {
+      ethernet_timer = millis() + 300000;
+      ether.browseUrl(PSTR("/door_control/sync.php"),"", website, my_callback);
+      vTaskDelay(1);
+    }
   }
 }
 
@@ -206,23 +217,31 @@ Sd2Card card;
 byte tmpBuf[512];
 static void vSDCardSpi2ReadTask(void *pvParameters) 
 {
-  vTaskDelay(2000);
+vTaskDelay(1000);  
+  
+#ifdef DEBUG
   Serial.println(F("SD Read Task..."));
   Serial.print(F("Initializing SD card...\n"));
+  #endif
   
   if (!card.init(SPI_HALF_SPEED, PB12)) 
   {
+    #ifdef DEBUG
     Serial.println(F("initialization failed. Things to check:"));
     Serial.println(F("* is a card inserted?"));
     Serial.println(F("* is your wiring correct?"));
     Serial.println(F("* did you change the chipSelect pin to match your shield or module?"));
+    #endif
     while (1)vTaskDelay(5000);;
   } 
   else 
   {
+    #ifdef DEBUG
     Serial.println(F("Wiring is correct and a card is present."));
+    #endif
   }
 
+  #ifdef DEBUG
   Serial.println();
   Serial.print("Card type:         ");
   switch (card.type()) {
@@ -231,7 +250,7 @@ static void vSDCardSpi2ReadTask(void *pvParameters)
     case SD_CARD_TYPE_SDHC:     Serial.println("SDHC");     break;
     default:      Serial.println("Unknown");
     }
-
+  #endif
 
   for (;;) 
   {
@@ -281,18 +300,19 @@ void setup()
 {
    Serial.begin(115200);
    Serial.println(F("Generic STM32F103C8 with bootloader...\r\n"));
-   //delay(1000); 
+   delay(1000); 
    
     xEventGroup = xEventGroupCreate();
 
-   xTaskCreate(vBoardAliveLEDTask,"Task1", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 2,  NULL);
-   xTaskCreate(vSDCardSpi2ReadTask,"Task2", configMINIMAL_STACK_SIZE + 100, NULL, tskIDLE_PRIORITY + 4,  NULL);
-   xTaskCreate(vPN532Serial3Task,"Task3", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1,  NULL);
-   xTaskCreate(vEnc28j60spi1Task,"Task4", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 3,  NULL);
+   xTaskCreate(vBoardAliveLEDTask,"Task1", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1,  NULL);
+   xTaskCreate(vSDCardSpi2ReadTask,"Task2", configMINIMAL_STACK_SIZE + 100, NULL, tskIDLE_PRIORITY + 2,  NULL);
+   xTaskCreate(vPN532Serial3Task,"Task3", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 2,  NULL);
+   xTaskCreate(vEnc28j60spi1Task,"Task4", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 2,  NULL);
 
     vTaskStartScheduler();
 }
 
 void loop() {
     // Insert background code here
+
 }
