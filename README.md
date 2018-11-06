@@ -1,6 +1,7 @@
-# nano_enc28j60
+# network Door lock
+
 상규랑 같이하는 프로젝트...난 임베디드 쪽~
-2018-10-26
+# 2018-10-26
 기본 셋팅 
 릴레이 초기화 시간 1바이트
 IP자동 구분 1바이트 (0:자동 1:고정)
@@ -34,7 +35,7 @@ DNS 8바이트
 데이타받을때 같이온 시간 값을 메모리 특정 영역에 저장하고 있다가
 5분뒤 동기화 할때 저장된 시간 정보를 SyncDate로 보냄
 
-2018-10-31
+# 2018-10-31
 arduino nano v3에서 stm32f103 bluepill 보드로 변경후 중간결과
 1. bulepill(stm32duino)는 2가지 버젼의 라이브러리가 존재함
    - maple lib : https://github.com/rogerclarkmelbourne/Arduino_STM32
@@ -51,12 +52,12 @@ arduino nano v3에서 stm32f103 bluepill 보드로 변경후 중간결과
 4. SDcard를 spi2를 이용하여 동작확인 -> SD 라이브러리 수정이 있었음
 5. os event를 사용하여 uid 인식시 sdcard를 읽도록 수정후 동작확인
 
-2018-11-05
+# 2018-11-05
 SPI포트변경
 ....AppData\Local\Arduino15\packages\stm32duino\hardware\STM32F1\2018.9.24\variants\generic_stm32f103c\board
 board.h를 첨부된 파일로 덮어씌우기 할 것...
 
-2018-11-06
+# 2018-11-06
 처음 전체 셋팅시 수신 받을 데이타가 많기때문에 나눠서 받는 방법으로 변경
 
 초기 셋팅시
