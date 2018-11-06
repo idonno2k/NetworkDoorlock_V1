@@ -1,0 +1,31 @@
+처음 전체 셋팅시 수신 받을 데이타가 많기때문에 나눠서 받는 방법으로 변경
+
+초기 셋팅시
+1.  http://body.ibuild.kr/door_control/sync.php?SyncType=1&SyncDate=0
+    으로 전송시 수신받을 데이타 양과 시간 데이타가 리턴
+    SyncType를 1로 보낼경우 데이타 양과 시간 정보만 리턴
+
+2.  http://body.ibuild.kr/door_control/sync.php?sNo=0&sCount=3&SyncDate=0
+    카드번호와 y , n 에 대한 정보를 리턴
+    sNo 는 수신받을 데이타의 시작번호 ( 0 ) 부터 시작
+    sCount 는 수신받을 데이타의 양
+    sNo=0&sCount=3 로 했을경우 0번째 데이타부터 3개의 데이타 수신
+    sNo=5&sCount=10 로 했을경우 5번째 데이타부터 10개의 데이타 수신
+
+    수신받을 데이타라 320개 이고 100개씩 받기로 정했다면
+    sNo=0&sCount=100 으로 처리 후
+    sNo=100&sCount=100 
+    sNo=200&sCount=100
+    sNo=300&sCount=20   이런식으로 나눠서 데이타 수신
+
+3. 변수에 SyncDate의 값으로 활용할 시간정보를 1번에서 받은 시간 정보 저장
+
+4. 시간정보는 동기화시 SyncDate의 값으로 활용 ( 동기화 할때마다 SyncDate 값은 다시 갱신 )
+    SyncDate 이후 변경된 데이타만 수신할것임
+
+5분마다 동기화시
+1.  http://body.ibuild.kr/door_control/sync.php?SyncType=1&SyncDate=SyncDate
+     으로 수신받을 데이타 양과 시간정보 리턴
+     ( 초기화의 1번에서 SyncDat값만 변경 )
+
+2.  초기화의 2번방법 활용
