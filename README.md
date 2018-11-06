@@ -1,5 +1,38 @@
 # nano_enc28j60
 상규랑 같이하는 프로젝트...난 임베디드 쪽~
+2018-10-26
+기본 셋팅 
+릴레이 초기화 시간 1바이트
+IP자동 구분 1바이트 (0:자동 1:고정)
+DNS자동 구분 1바이트 (0:자동 1:고정)
+소방신호전압 1바이트
+공백 6바이트
+아이피 (ip , 서브넷 , 게이트웨이) 12바이트
+DNS 8바이트
+공백 9바이트
+동기화 위한 url 100바이트  (Data_Length + Data)
+단말기구분이름 100바이트 (Data_Length + Data) (base64로 인코딩 되어있음, 인코딩된 상태 그대로 사용)
+========================================230바이트 (전체)
+
+5분마다 동기화
+동기화 데이타 구조
+
+[[S]]데이타 수[]시간[]rf번호/yn>rf번호/yn>rf번호/yn>rf번호/yn>........[[E]]
+
+[[S]] 로 시작을 알리며
+전체 데이타 수, 시간, 동기화 데이타 순으로 전송되며
+데이타 수, 시간, 동기화 데이타는 [] 로 구분됨
+데이타에서 RF번호와 y또는 n의 구분은 / 로 구분되며 
+데이타와 데이타 는 > 로 구분됨
+
+시간은 동기화 되는 시간으로 웹에서 현재시간을 보냄
+형식은 년월일시분초(14자리)
+동기화 주소와 함께 최종 동기화 시간을 함께 전송
+예) 동기화 주소?SyncDate=시간
+
+처음 동기화시 SyncDate는 0으로 보내고
+데이타받을때 같이온 시간 값을 메모리 특정 영역에 저장하고 있다가
+5분뒤 동기화 할때 저장된 시간 정보를 SyncDate로 보냄
 
 2018-10-31
 arduino nano v3에서 stm32f103 bluepill 보드로 변경후 중간결과
@@ -22,3 +55,36 @@ arduino nano v3에서 stm32f103 bluepill 보드로 변경후 중간결과
 SPI포트변경
 ....AppData\Local\Arduino15\packages\stm32duino\hardware\STM32F1\2018.9.24\variants\generic_stm32f103c\board
 board.h를 첨부된 파일로 덮어씌우기 할 것...
+
+2018-11-06
+처음 전체 셋팅시 수신 받을 데이타가 많기때문에 나눠서 받는 방법으로 변경
+
+초기 셋팅시
+1.  http://body.ibuild.kr/door_control/sync.php?SyncType=1&SyncDate=0
+    으로 전송시 수신받을 데이타 양과 시간 데이타가 리턴
+    SyncType를 1로 보낼경우 데이타 양과 시간 정보만 리턴
+
+2.  http://body.ibuild.kr/door_control/sync.php?sNo=0&sCount=3&SyncDate=0
+    카드번호와 y , n 에 대한 정보를 리턴
+    sNo 는 수신받을 데이타의 시작번호 ( 0 ) 부터 시작
+    sCount 는 수신받을 데이타의 양
+    sNo=0&sCount=3 로 했을경우 0번째 데이타부터 3개의 데이타 수신
+    sNo=5&sCount=10 로 했을경우 5번째 데이타부터 10개의 데이타 수신
+
+    수신받을 데이타라 320개 이고 100개씩 받기로 정했다면
+    sNo=0&sCount=100 으로 처리 후
+    sNo=100&sCount=100 
+    sNo=200&sCount=100
+    sNo=300&sCount=20   이런식으로 나눠서 데이타 수신
+
+3. 변수에 SyncDate의 값으로 활용할 시간정보를 1번에서 받은 시간 정보 저장
+
+4. 시간정보는 동기화시 SyncDate의 값으로 활용 ( 동기화 할때마다 SyncDate 값은 다시 갱신 )
+    SyncDate 이후 변경된 데이타만 수신할것임
+
+5분마다 동기화시
+1.  http://body.ibuild.kr/door_control/sync.php?SyncType=1&SyncDate=SyncDate
+     으로 수신받을 데이타 양과 시간정보 리턴
+     ( 초기화의 1번에서 SyncDat값만 변경 )
+
+2.  초기화의 2번방법 활용
