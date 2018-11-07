@@ -56,7 +56,7 @@ static void vPN532Serial3Task(void)
   //rfid loop 500ms
   if (millis() > rfid_timer) 
   {
-    rfid_timer = millis() + 500;
+    rfid_timer = millis() + 1000;
 
     // Wait for an ISO14443A type cards (Mifare, etc.).  When one is found
     // 'uid' will be populated with the UID, and uidLength will indicate

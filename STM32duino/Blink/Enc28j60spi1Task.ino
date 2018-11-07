@@ -3,23 +3,19 @@
 #include <SPI.h>
 #include <EtherCard_STM.h>
 
+
+
 static uint32_t ethernet_timer;
 
 static byte mymac[] = { 0x74,0x69,0x69,0x2D,0x30,0x31 };
-#define BUFFER_SIZE 700
+#define BUFFER_SIZE 2048
 byte Ethernet::buffer[BUFFER_SIZE];
 Stash stash;
-//const char website[] PROGMEM = "www.flysys.kr";
+
 const char website[] PROGMEM = "body.ibuild.kr";
 
-// called when the client request is complete
-static void my_callback (byte status, uint16_t off, uint16_t len)
-{
-  Serial.println(">>>");
-  Ethernet::buffer[off+300] = 0;
-  Serial.print((const char*) Ethernet::buffer + off);
-  Serial.println("...");
-}
+#define sCntMax 30
+
 void vEnc28j60spi1Task_setup(void) 
 {
   Serial.println(F("Enc28j60 spi1 Task..."));
@@ -46,19 +42,153 @@ void vEnc28j60spi1Task_setup(void)
   Serial.println("DNS failed");
   
   ether.printIp("SRV: ", ether.hisip);
+
+  etherStep = SyncInit;
+  ethernet_timer = millis();
 }
 
+uint16_t loopCnt;
+uint16_t sNo = 0;
+uint16_t sCnt = 0;
+uint16_t sDateNum=0; 
 void vEnc28j60spi1Task(void)
 {
-  //===============================================================
-  //ethernet loop 5000ms
-  ether.packetLoop(ether.packetReceive());
+  uint16_t RcvLen = ether.packetReceive();
+  ether.packetLoop(RcvLen);
+
+  if(RcvLen)
+  {
+    Serial.print( loopCnt, DEC); Serial.print(" ");Serial.println(RcvLen,DEC);
+    loopCnt = 0;
+  }
+  else
+  {
+    loopCnt++;
+  }
+    
+  
   if (millis() > ethernet_timer) 
   {
-    ethernet_timer = millis() + 5000;
-    ether.browseUrl(PSTR("/door_control/sync.php"),"", website, my_callback);
+    if(etherStep == SyncInit)
+    {
+      ether.browseUrl(PSTR("/door_control/sync.php"),"?SyncType=1&SyncDate=0", website, SyncInit_callback);
+      sNo = 0;
+      sCnt = sCntMax;
+      etherStep = SyncData;
+      ethernet_timer = millis() + 30000;//for timeout 300s
+    }
+    else if(etherStep == SyncData)
+    {
+      char paramStr[50]; 
+      sprintf(paramStr,"?sNo=%d&sCount=%d&SyncDate=0",sNo,sCnt); 
+      //Serial.println(paramStr);
+      ether.browseUrl(PSTR("/door_control/sync.php"),paramStr, website, SyncData_callback);
+
+      ethernet_timer = millis() + 5000;//for timeout 300s
+    }
+    else if(etherStep == SyncUpdate)
+    {
+     // ether.browseUrl(PSTR("/door_control/sync.php"),"?SyncType=1&SyncDate=SyncDate", website, my_callback);
+      etherStep = SyncIdle;
+      ethernet_timer = millis() + 30000;//for timeout 300s
+    }
+    else //idle
+    {
+
+    }
   }
   
 } 
+
+// called when the client request is complete
+
+static void SyncInit_callback (byte status, uint16_t off, uint16_t len)
+{
+  Ethernet::buffer[off+300] = 0;
+  
+  char *ptr = strstr((const char*) Ethernet::buffer + off, "[[S]]");  
+  Serial.print((const char*)ptr);Serial.println("");
+  
+  char *ptrtok = strtok(ptr+5, "[]");
+  sDateNum = (uint16_t)strtoul( ptrtok, NULL, 10);
+  Serial.println(sDateNum);
+  
+  ptrtok = strtok(NULL, "[]");
+  Serial.print((const char*)ptrtok);
+  Serial.println("");
+
+  ethernet_timer = millis() + 100;
+}
+
+typedef struct _UID {   // 구조체 이름은 _Person
+    uint32_t uid;
+    uint8_t auth;        // 구조체 멤버 3
+} UID;                  // typedef를 사용하여 구조체 별칭을 Person으로 정의
+UID uIDArry[sCntMax];
+
+static void SyncData_callback (byte status, uint16_t off, uint16_t len)
+{
+  Ethernet::buffer[off+len] = 0;
+
+  Serial.print((const char*)Ethernet::buffer + off);
+  
+  //char tmpStr[50]; 
+  //sprintf(tmpStr,"off=%d  len=%d sNo=%d & sCount=%d & sDateNum=%d",off,len ,sNo,sCnt,sDateNum); 
+  //Serial.println(tmpStr);
+
+    #if 0
+    char *ptr = strstr((const char*)Ethernet::buffer + off, "Content-Length:"); 
+  if(ptr == NULL)
+  {
+      Serial.println("HTTP fail...");
+      char paramStr[50]; 
+      //sprintf(paramStr,"?sNo=%d&sCount=%d&SyncDate=0",sNo,sCnt); 
+      //Serial.println(paramStr);
+      ether.browseUrl(PSTR("/door_control/sync.php"),paramStr, website, SyncData_callback);
+  
+  }
+  else
+  {
+    //Serial.print((const char*)Ethernet::buffer + off);Serial.println("");
+  
+    char *ptr = strstr((const char*) Ethernet::buffer + off, "[[S]]");  
+    //Serial.print((const char*)ptr);Serial.println("");
+    ptr = ptr +5;
+    ptr = strtok(ptr,">");
+    if(ptr != NULL)
+    {
+      for(int index=0 ; index < sCntMax ; index++)
+      {
+        //Serial.print((const char*)ptr);Serial.print(" ");
+        
+        uIDArry[index].uid = strtoul( ptr, NULL, 16);
+        uIDArry[index].auth = *(ptr+9);
+        ptr = strtok(NULL,">");
+  
+        char s[10];
+        sprintf(s, "%08X " ,uIDArry[index].uid);
+        Serial.print(s);
+      }
+      Serial.println("");
+      
+      sNo = sNo + sCnt;
+      if((sDateNum - sNo) < sCnt)
+      sCnt = sDateNum - sNo;
+      
+      if(sDateNum <=  sNo)
+      {
+        sNo = 0;
+        sCnt = 0;
+        sDateNum = 0;
+        etherStep = SyncIdle;
+        Serial.println("SyncData finished");
+      }
+    }
+    
+
+  }
+ #endif
+  ethernet_timer = millis() + 100;
+}
 
 #endif

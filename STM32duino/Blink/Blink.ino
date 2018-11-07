@@ -3,10 +3,16 @@
 #define PN532_ENABLE
 #define SDCARD_ENABLE
 
+enum etherState
+{
+    SyncIdle, SyncInit, SyncData, SyncUpdate
+};
+etherState etherStep = SyncIdle;
+
 // the setup function runs once when you press reset or power the board
 void setup() 
 {
-    Serial.begin(115200);
+    Serial.begin(57600);
     delay(1000);
     
     Serial.println(F("Generic STM32F103C8 with bootloader...\r\n"));
@@ -25,8 +31,11 @@ void loop()
 {
   
   vEnc28j60spi1Task();
-  vPN532Serial3Task(); 
-  vSDCardSpi2ReadTask();
+  if(etherStep == SyncIdle)
+  {
+    vPN532Serial3Task(); 
+  }
+  //vSDCardSpi2ReadTask();
 }
 
 
