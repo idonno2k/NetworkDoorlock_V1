@@ -76,8 +76,13 @@ void vPN532Serial3Task(void)
       Serial.println("");
       #endif
       
-      setEvent(&rfid_event , RFID_DONE);
-      Serial.print(rfid_event, HEX);
+     // setEvent(&rfid_event , RFID_DONE);
+     // Serial.print(rfid_event, HEX);
+
+     vSDCardUidDateLoad(uid) ;
+
+
+      
     }
     else
     {

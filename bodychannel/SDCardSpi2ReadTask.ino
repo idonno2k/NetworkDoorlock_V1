@@ -65,9 +65,9 @@ void vSDCardFolder(String ns )
 {
   //Serial.println(ns);    
   if (SD.exists(ns)){
-    //Serial.println("folder ok");    
+    Serial.println("folder ok");    
   }else{
-    //Serial.println("folder no");    
+    Serial.println("folder no");    
     SD.mkdir(ns);
   }   
 }
@@ -75,9 +75,9 @@ void vSDCardFile(String ns , String divi)
 {
   //Serial.println(divi);    
   if(divi == "79"){
-    //Serial.println("y");    
+    Serial.println("y");    
     if (SD.exists(ns)){
-      //Serial.println("folder ok");    
+      Serial.println("folder ok");    
     }else{
       File myFile;
       myFile = SD.open(ns, FILE_WRITE);
@@ -85,7 +85,7 @@ void vSDCardFile(String ns , String divi)
       myFile.close();
     }      
   }else{
-    //Serial.println("n");    
+    Serial.println("n");    
     SD.remove(ns);
   }
  
@@ -122,6 +122,59 @@ void vSDCardSyncDateLoad( )
     SyncDateStr = "0";
   }
   
+}
+
+String authUid;
+void vSDCardUidDateLoad(uint8_t * uid ) 
+{
+  File myFile;
+  char StringChar[20]; 
+  sprintf(StringChar,"%02X%02X%02X%02X", uid[0],uid[1],uid[2],uid[3]);
+
+    int StrDec;
+  char StrChar;
+
+  String folder01 = String(StringChar).substring(0, 2);
+  String folder02 = String(StringChar).substring(2, 5);
+  String folderFile = String(StringChar).substring(2, 8);
+  //String FileState = String(sa);     
+  
+ // vSDCardFolder(folder01 + "/" + folder02);
+ // vSDCardFile(folder01 + "/" + folder02 + "/" + folderFile , FileState);  
+
+String pathStr = folder01 + "/" + folder02 + "/" + folderFile;
+    
+  Serial.println((const char*)pathStr.c_str());       
+
+  if (SD.exists(pathStr))
+  {
+     authUid = "";
+    myFile = SD.open(pathStr);
+
+    if (myFile) {
+      // read from the file until there's nothing else in it:
+      while (myFile.available()) {
+        authUid += (char)(myFile.read());
+
+      //StrDec = (int)(myFile.read());
+      //StrChar = (char)StrDec;   
+      //authUid = authUid + StrChar;
+      }
+      myFile.close();
+    }
+    Serial.println((const char*)authUid.c_str());     
+  }
+  else
+  {
+    Serial.println("permission denied...");   
+   // vSDCardFolder(folder01 + "/" + folder02);
+   // vSDCardFile(folder01 + "/" + folder02 + "/" + folderFile , "y");   
+    
+   //  File myFile;
+   //   myFile = SD.open(folder01 + "/" + folder02 + "/" + folderFile, FILE_WRITE);
+   //   myFile.print("y");
+   //   myFile.close();  
+  }
 }
 
 void vSDCardSpi2ReadTask(void) 

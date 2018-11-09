@@ -9,7 +9,7 @@ String SyncDateStrNew = "0";
 
 enum etherState
 {
-    SyncIdle, SyncInit, SyncData, SyncUpdate
+    SyncIdle, SyncInit, SyncData
 };
 etherState etherStep = SyncIdle;
 
@@ -17,7 +17,7 @@ etherState etherStep = SyncIdle;
 void setup() 
 {
     Serial.begin(115200);
-    //delay(1000);
+    delay(1000);
     
     Serial.println(F("Generic STM32F103C8 with bootloader...\r\n"));
     
@@ -25,8 +25,8 @@ void setup()
 
     vSDCardSpi2ReadTask_setup();    delay(1000);    
     vPN532Serial3Task_setup();      delay(1000);
-    vSDCardSyncDateLoad();          delay(1000);
-    vEnc28j60spi1Task_setup();      delay(1000);
+   // vSDCardSyncDateLoad();          delay(1000);
+    //vEnc28j60spi1Task_setup();      delay(1000);
 
    //xTaskCreate(vPN532Serial3Task,"Task3", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1,  NULL);
    //xTaskCreate(vEnc28j60spi1Task,"Task4", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 3,  NULL);
@@ -38,12 +38,12 @@ void setup()
 void loop() 
 {
 
-  vEnc28j60spi1Task();
-  //vPN532Serial3Task(); 
-  if(etherStep == SyncIdle)
-  {
-    vPN532Serial3Task(); 
-  }
+ // vEnc28j60spi1Task();
+  vPN532Serial3Task(); 
+ // if(etherStep == SyncIdle)
+  //{
+  //  vPN532Serial3Task(); 
+ // }
   //vSDCardSpi2ReadTask();
 
 
