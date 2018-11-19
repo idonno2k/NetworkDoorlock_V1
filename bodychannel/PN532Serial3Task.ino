@@ -8,7 +8,6 @@ static uint32_t rfid_timer;
 PN532_HSU pn532hsu(Serial3);
 PN532 nfc(pn532hsu);
 
-
 void vPN532Serial3Task_setup(void) 
 {
   
@@ -48,14 +47,13 @@ void vPN532Serial3Task(void)
     uint8_t uid[] = { 0, 0, 0, 0, 0, 0, 0 };  // Buffer to store the returned UID
     uint8_t uidLength;                        // Length of the UID (4 or 7 bytes depending on ISO14443A card type)
 
-
   //===============================================================
   //rfid loop 500ms
   if (millis() > rfid_timer) 
   {
-    digitalWrite(PC13, HIGH);
+    //digitalWrite(PC13, HIGH);
     success = nfc.readPassiveTargetID(PN532_MIFARE_ISO14443A, &uid[0], &uidLength,50);
-    digitalWrite(PC13, LOW);
+    //digitalWrite(PC13, LOW);
   
     if (success) 
     {
@@ -69,8 +67,7 @@ void vPN532Serial3Task(void)
       }
       Serial.println("");
       #endif
-      
-     // setEvent(&rfid_event , RFID_DONE);
+
      // Serial.print(rfid_event, HEX);
 
      vSDCardUidDateLoad(uid) ;
@@ -82,7 +79,7 @@ void vPN532Serial3Task(void)
       //Serial.println("Timed out waiting for a card");
       #endif
     }
-	Serial.print(".");
+	//Serial.print(".");
     rfid_timer = millis() + 1000;
     
   }                 // wait for a second

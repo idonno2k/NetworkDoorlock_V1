@@ -7,7 +7,7 @@ Sd2Card card;
 SdVolume volume;
 SdFile root;
 
-byte tmpBuf[512];
+//byte tmpBuf[512];
 void vSDCardSpi2ReadTask_setup(void) 
 {
 
@@ -103,14 +103,96 @@ void vSDCardFile(String ns , String divi)
 	}
  }
 
-String SettingPath = "SYNCDATE";
+String IP_Path = "IP";
+String SettingPath = "SET";
+/*void vSDCardSetDate( String sDate ) 
+{
+  if (SD.exists(SettingPath))
+    SD.remove(SettingPath);
+  
+  File myFile;
+  myFile = SD.open(SettingPath, FILE_WRITE);
+  myFile.print(sDate);
+  myFile.close();
+}*/
+
+void vSDCardSetDateLoad( ) 
+{
+	File myFile;
+	int StringDec;
+	char StringChar;
+
+	SetDateStr = "0"; 
+	IPDateStr = "0"; 
+	if (SD.exists(IP_Path))  
+	{
+		myFile = SD.open(IP_Path);
+		IPDateStr = "";
+		if (myFile) 
+		{
+			while (myFile.available()) 
+			{
+				//StringDec = (int)(myFile.read());
+				//StringChar = (char)StringDec;   
+				//IPDateStr = IPDateStr + StringChar;
+
+       IPDateStr += (char)(myFile.read());
+			}
+			myFile.close();
+		} 
+    static_IP = IPDateStr.charAt(0);
+    if(static_IP == '1')
+    {
+      uint8_t offset = 1;
+      uint8_t length;
+      String ip ;
+      length = IPDateStr.indexOf("\n",offset);  ip = IPDateStr.substring(offset,length); ether.parseIp(myip ,(char*)ip.c_str()); offset = offset + length;
+      length = IPDateStr.indexOf("\n",offset);  ip = IPDateStr.substring(offset,length); ether.parseIp(maskip ,(char*)ip.c_str()); offset = offset + length;
+      length = IPDateStr.indexOf("\n",offset);  ip = IPDateStr.substring(offset,length); ether.parseIp(gwip ,(char*)ip.c_str()); offset = offset + length;
+      length = IPDateStr.indexOf("\n",offset);  ip = IPDateStr.substring(offset,length); ether.parseIp(dnsip ,(char*)ip.c_str()); offset = offset + length;
+    }
+	}
+
+	if (SD.exists(SettingPath))  
+	{
+		myFile = SD.open(SettingPath);
+		SetDateStr = "";
+		if (myFile) 
+		{
+			while (myFile.available()) 
+			{
+        SetDateStr += (char)(myFile.read());
+			}
+			myFile.close();
+
+      uint8_t offset = 0;      uint8_t length;      String s ;
+      length = IPDateStr.indexOf("\n",offset);  s = IPDateStr.substring(offset,length); offset = offset + length;
+
+      uint8_t idx = 0;      uint8_t len;      String s1;
+      len = s.indexOf("/",0);     s1 = s.substring(idx,len);  s1.toCharArray(website,len); idx = idx + len;
+      len = s.indexOf("\0",idx);  s1 = s.substring(idx,len);  s1.toCharArray(suburl,len);   
+      
+      length = IPDateStr.indexOf("\n",offset);  s = IPDateStr.substring(offset,length); s.toCharArray(device_name,length); offset = offset + length;
+      length = IPDateStr.indexOf("\n",offset);  s = IPDateStr.substring(offset,length); s.toCharArray(device_serial,length); offset = offset + length;
+      length = IPDateStr.indexOf("\n",offset);  s = IPDateStr.substring(offset,length); RelayOpTime = (uint16_t)(strtoul( s.c_str(), NULL, 10)*1000);  offset = offset + length;
+      length = IPDateStr.indexOf("\n",offset);  s = IPDateStr.substring(offset,length); FireVoltage = (uint16_t)strtoul( s.c_str(), NULL, 10);
+    
+		} 
+	}
+
+	
+  
+}
+
+
+String SyncPath = "SYNCDATE";
 void vSDCardSyncDate( String sDate ) 
 {
-	if (SD.exists("SYNCDATE"))
-		SD.remove("SYNCDATE");
+	if (SD.exists(SyncPath))
+		SD.remove(SyncPath);
 	
 	File myFile;
-	myFile = SD.open("SYNCDATE", FILE_WRITE);
+	myFile = SD.open(SyncPath, FILE_WRITE);
 	myFile.print(sDate);
 	myFile.close();
 }
@@ -122,18 +204,20 @@ void vSDCardSyncDateLoad( )
 	char StringChar;
 
 	SyncDateStr = "0";
-	if (SD.exists(SettingPath))	
+	if (SD.exists(SyncPath))	
 	{
-		myFile = SD.open(SettingPath);
+		myFile = SD.open(SyncPath);
 		SyncDateStr = "";
 		if (myFile) 
 		{
 			// read from the file until there's nothing else in it:
 			while (myFile.available()) 
 			{
-				StringDec = (int)(myFile.read());
-				StringChar = (char)StringDec;   
-				SyncDateStr = SyncDateStr + StringChar;
+				//StringDec = (int)(myFile.read());
+				//StringChar = (char)StringDec;   
+				//SyncDateStr = SyncDateStr + StringChar;
+
+       SyncDateStr += (char)(myFile.read());
 			}
 
 			myFile.close();
@@ -183,6 +267,8 @@ void vSDCardUidDateLoad(uint8_t * uid )
 			myFile.close();
 		}
 		Serial.println((const char*)authUid.c_str());     
+
+    setEvent(&ActiveEvent , RFID_DONE);
 	}
 	else
 	{

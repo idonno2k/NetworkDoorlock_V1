@@ -3,16 +3,20 @@
 #include <SPI.h>
 #include <EtherCard_STM.h>
 
-
-
 static uint32_t ethernet_timer;
 
-static byte mymac[] = { 0x74,0x69,0x69,0x2D,0x30,0x31 };
+static char static_IP = '0'; 
+static char website[]  = "body.ibuild.kr";
+static char suburl[]  = "/door_control/sync.php";
+static uint8_t mymac[6] = { 0x74,0x69,0x69,0x2D,0x30,0x31 };
+static uint8_t myip[4];   ///< IP address
+static uint8_t maskip[4]; ///< Netmask
+static uint8_t gwip[4];   ///< Gateway
+static uint8_t dnsip[4]; ///< DHCP server IP address
+
 #define BUFFER_SIZE 2048
 byte Ethernet::buffer[BUFFER_SIZE];
 Stash stash;
-
-const char website[] PROGMEM = "body.ibuild.kr";
 
 #define sCntMax 30
 
@@ -26,13 +30,17 @@ void vEnc28j60spi1Task_setup(void)
 	if (ether.begin(sizeof Ethernet::buffer, mymac,PA15) == 0)
 		Serial.println(F("Failed to access Ethernet controller"));
 
+if( static_IP == '1') 
+{
 	//static setup
-	//if (!ether.staticSetup(myip, gwip, dnsip, maskip))
-	//    Serial.println("static setup failed");
-
+	if (!ether.staticSetup(myip, gwip, dnsip, maskip))
+	    Serial.println("static setup failed");
+}
+else
+{
 	if (!ether.dhcpSetup())
 		Serial.println(F("DHCP failed"));
-
+}
 	ether.printIp("IP:  ", ether.myip);
 	ether.printIp("GW:  ", ether.gwip);
 	ether.printIp("DNS: ", ether.dnsip);
@@ -64,7 +72,8 @@ void vEnc28j60spi1Task(void)
 			const char *cstr = SyncDateStr.c_str();
 			sprintf(paramStr,"?SyncType=1&SyncDate=%s", cstr);
 			//Serial.println((const char*)paramStr);       
-			ether.browseUrl(PSTR("/door_control/sync.php"), (const char*)paramStr , website, SyncInit_callback);
+			//ether.browseUrl(PSTR("/door_control/sync.php"), (const char*)paramStr , website, SyncInit_callback);
+      ether.browseUrl(suburl, (const char*)paramStr , website, SyncInit_callback);
 			sNo = 0;
 			sCnt = sCntMax;
 			etherStep = SyncData;
@@ -75,7 +84,8 @@ void vEnc28j60spi1Task(void)
 			const char *cstr = SyncDateStr.c_str();   
 			sprintf(paramStr, "?sNo=%d&sCount=%d&SyncDate=%s",sNo,sCnt, cstr); 
 			//Serial.println((const char*)paramStr);  
-			ether.browseUrl(PSTR("/door_control/sync.php"),(const char*)paramStr, website, SyncData_callback);
+			//ether.browseUrl(PSTR("/door_control/sync.php"),(const char*)paramStr, website, SyncData_callback);
+      ether.browseUrl(suburl,(const char*)paramStr, website, SyncData_callback);
 			ethernet_timer = millis() + 2000; 
 		}
 		else //idle
