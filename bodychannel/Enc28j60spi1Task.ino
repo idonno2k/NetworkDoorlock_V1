@@ -1,11 +1,12 @@
 #ifdef ENC28J60_ENABLE
+//#define DEBUG_ENC28J60
 
 #include <SPI.h>
 #include <EtherCard_STM.h>
 
 static uint32_t ethernet_timer;
 
-static char static_IP = '0'; 
+static uint8_t static_IP = 0; 
 static char website[]  = "body.ibuild.kr";
 static char suburl[]  = "/door_control/sync.php";
 static uint8_t mymac[6] = { 0x74,0x69,0x69,0x2D,0x30,0x31 };
@@ -22,25 +23,29 @@ Stash stash;
 
 void vEnc28j60spi1Task_setup(void) 
 {
+	#ifdef DEBUG_ENC28J60
 	Serial.println(F("Enc28j60 spi1 Task..."));
-	// Change 'SS' to your Slave Select pin, if you arn't using the default pin
+	#endif
 
 	afio_cfg_debug_ports(AFIO_DEBUG_SW_ONLY); // release PB3 and PB5 
 	afio_remap(AFIO_REMAP_SPI1); // remap SPI1
 	if (ether.begin(sizeof Ethernet::buffer, mymac,PA15) == 0)
+	{
 		Serial.println(F("Failed to access Ethernet controller"));
+  	}
 
-if( static_IP == '1') 
-{
-	//static setup
-	if (!ether.staticSetup(myip, gwip, dnsip, maskip))
-	    Serial.println("static setup failed");
-}
-else
-{
-	if (!ether.dhcpSetup())
-		Serial.println(F("DHCP failed"));
-}
+	if( static_IP == 1) 
+	{
+		Serial.println("STATIC_IP");
+		if (!ether.staticSetup(myip, gwip, dnsip, maskip))
+	    	Serial.println("static setup failed");
+	}
+	else
+	{
+   		Serial.println("DHCP:");
+		if (!ether.dhcpSetup())
+			Serial.println(F("DHCP failed"));
+	}
 	ether.printIp("IP:  ", ether.myip);
 	ether.printIp("GW:  ", ether.gwip);
 	ether.printIp("DNS: ", ether.dnsip);
@@ -71,9 +76,13 @@ void vEnc28j60spi1Task(void)
 			vSDCardSyncDateLoad( ) ;
 			const char *cstr = SyncDateStr.c_str();
 			sprintf(paramStr,"?SyncType=1&SyncDate=%s", cstr);
-			//Serial.println((const char*)paramStr);       
-			//ether.browseUrl(PSTR("/door_control/sync.php"), (const char*)paramStr , website, SyncInit_callback);
-      ether.browseUrl(suburl, (const char*)paramStr , website, SyncInit_callback);
+       		#ifdef DEBUG_ENC28J60
+			//Serial.println((const char*)paramStr); 
+      		Serial.print(website);Serial.print(suburl);Serial.println(paramStr);
+      		#endif
+      		ether.browseUrl((const char*)suburl, (const char*)paramStr , (const char*)website, SyncInit_callback);
+      		//ether.browseUrl(PSTR("/door_control/sync.php"), (const char*)paramStr , website, SyncInit_callback);
+      
 			sNo = 0;
 			sCnt = sCntMax;
 			etherStep = SyncData;
@@ -83,9 +92,12 @@ void vEnc28j60spi1Task(void)
 		{
 			const char *cstr = SyncDateStr.c_str();   
 			sprintf(paramStr, "?sNo=%d&sCount=%d&SyncDate=%s",sNo,sCnt, cstr); 
+      		#ifdef DEBUG_ENC28J60
 			//Serial.println((const char*)paramStr);  
-			//ether.browseUrl(PSTR("/door_control/sync.php"),(const char*)paramStr, website, SyncData_callback);
-      ether.browseUrl(suburl,(const char*)paramStr, website, SyncData_callback);
+      		Serial.print(website);Serial.print(suburl);Serial.println(paramStr);
+      		#endif
+      		ether.browseUrl((const char*)suburl,(const char*)paramStr, (const char*)website, SyncData_callback);
+      		//ether.browseUrl(PSTR("/door_control/sync.php"),(const char*)paramStr, website, SyncData_callback);
 			ethernet_timer = millis() + 2000; 
 		}
 		else //idle
@@ -106,19 +118,23 @@ static void SyncInit_callback (byte status, uint16_t off, uint16_t len)
 	//Serial.print("SyncInit_callback");
 	
 	char *ptr = strstr((const char*) Ethernet::buffer + off, "[[S]]");  
+#ifdef DEBUG_ENC28J60
 	Serial.print((const char*)ptr);Serial.println("");
-
+#endif
 	char *ptrtok = strtok(ptr+5, "[]");
 	sDateNum = (uint16_t)strtoul( ptrtok, NULL, 10);
+   #ifdef DEBUG_ENC28J60
 	Serial.print("sDateNum : ");
 	Serial.println(sDateNum);
+  #endif
 
 	ptrtok = strtok(NULL, "[]");
 	SyncDateStrNew = (const char*)ptrtok;
+  #ifdef DEBUG_ENC28J60
 	Serial.print("SyncDateStr : ");
 	Serial.print(SyncDateStrNew);
 	Serial.println("");
-
+  #endif
 	ethernet_timer = millis() + 100;
 }
 
@@ -131,15 +147,14 @@ UID uIDArry[sCntMax];
 static void SyncData_callback (byte status, uint16_t off, uint16_t len)
 {
 	Ethernet::buffer[off+len] = 0;
-
-	//Serial.print("SyncData_callback");
-	//Serial.print((const char*)Ethernet::buffer + off);
-	
-
-	//char tmpStr[50]; 
-	//sprintf(tmpStr,"off=%d  len=%d sNo=%d & sCount=%d & sDateNum=%d",off,len ,sNo,sCnt,sDateNum); 
-	//Serial.println(tmpStr);
-
+  #ifdef DEBUG_ENC28J60
+  //Serial.print("SyncData_callback");
+  //Serial.print((const char*)Ethernet::buffer + off);
+  //char tmpStr[50]; 
+  //sprintf(tmpStr,"off=%d  len=%d sNo=%d & sCount=%d & sDateNum=%d",off,len ,sNo,sCnt,sDateNum); 
+  //Serial.println(tmpStr);
+  #endif
+  
 	#if 0 //Content-Length filter
 	char *ptr = strstr((const char*)Ethernet::buffer + off, "Content-Length:"); 
 	if(ptr == NULL)
@@ -148,7 +163,8 @@ static void SyncData_callback (byte status, uint16_t off, uint16_t len)
 		char paramStr[150]; 
 		sprintf(paramStr,"?sNo=%d&sCount=%d&SyncDate=0",sNo,sCnt); 
 		//Serial.println(paramStr);
-		ether.browseUrl(PSTR("/door_control/sync.php"),(const char*)paramStr, website, SyncData_callback);
+		//ether.browseUrl(PSTR("/door_control/sync.php"),(const char*)paramStr, website, SyncData_callback);
+    ether.browseUrl((const char*)suburl, (const char*)paramStr , (const char*)website, SyncInit_callback);
 	}
 	else
 	#endif
@@ -156,7 +172,9 @@ static void SyncData_callback (byte status, uint16_t off, uint16_t len)
 	   // Serial.print((const char*)Ethernet::buffer + off);Serial.println("");
 		  
 		char *ptr = strstr((const char*) Ethernet::buffer + off, "[[S]]");  
+    #ifdef DEBUG_ENC28J60
 		Serial.print((const char*)ptr);Serial.println("");
+    #endif
 		ptr = ptr +5;
 		ptr = strtok(ptr,">");
 		#if 1
@@ -165,8 +183,9 @@ static void SyncData_callback (byte status, uint16_t off, uint16_t len)
 			
 			for(int index=0 ; index < sCntMax ; index++)
 			{
+        #ifdef DEBUG_ENC28J60
 				//Serial.print((const char*)ptr);Serial.print(" ");
-
+        #endif
 				uIDArry[index].uid = strtoul( ptr, NULL, 16);
 				uIDArry[index].auth = *(ptr+9);
 				ptr = strtok(NULL,">");
@@ -204,8 +223,9 @@ static void SyncData_callback (byte status, uint16_t off, uint16_t len)
 				vSDCardFile(folder01 + "/" + folder02 + "/" + folderFile , FileState);                   
 
 			}
+      #ifdef DEBUG_ENC28J60
 			Serial.println("");
-		
+		  #endif
 		  
 			sNo = sNo + sCnt;
 			if((sDateNum - sNo) < sCnt)

@@ -1,10 +1,9 @@
-#define DEBUG
+//#define DEBUG
 #define ENC28J60_ENABLE
 #define PN532_ENABLE
 #define SDCARD_ENABLE
 
-String SetDateStr = "0"; 
-String IPDateStr = "0"; 
+
 String SyncDateStr = "0"; 
 String SyncDateStrNew = "0"; 
 
@@ -12,7 +11,7 @@ String SyncDateStrNew = "0";
 
 static char device_name[]  = "67CU65SU7LGE64SQIOuNsOuqqA==";
 static char device_serial[] = "2000";
-uint16_t RelayOpTime = 3000;
+uint16_t RelayONTime = 3000;
 uint8_t FireVoltage = 24;
 
 enum etherState
@@ -26,30 +25,41 @@ etherState etherStep = SyncIdle;
 #define REMOTE_ON ( 1 << 2 )
 static uint8_t ActiveEvent = 0;
 static uint32_t relay_timer = 0;
+static uint32_t relay_ontime = 0;
 
 void vEventTask(void) 
 {
-  if((ActiveEvent & RFID_DONE) == RFID_DONE)
-  {
-    relay_timer = millis() + 3000;
-    clearEvent(&ActiveEvent ,RFID_DONE);
-    digitalWrite(PC13, HIGH);
-  }
-  else if((ActiveEvent & FIRE_ON) == FIRE_ON)
-  {
-    digitalWrite(PC13, HIGH);
-  }
-  else if((ActiveEvent & REMOTE_ON) == REMOTE_ON)
-  {
-    digitalWrite(PC13, HIGH);
-  }
-  else
-  {
     if (millis() > relay_timer) 
     {
-      digitalWrite(PC13, LOW);
+      if((ActiveEvent & RFID_DONE) == RFID_DONE)
+      {
+        relay_ontime = millis() + RelayONTime;
+        clearEvent(&ActiveEvent ,RFID_DONE);
+        digitalWrite(PC13, LOW);
+        #ifdef DEBUG
+        Serial.print("-");   
+        #endif
+      }
+      else if((ActiveEvent & FIRE_ON) == FIRE_ON)
+      {
+        digitalWrite(PC13, LOW);
+      }
+      else if((ActiveEvent & REMOTE_ON) == REMOTE_ON)
+      {
+        digitalWrite(PC13, LOW);
+      }
+      else
+      {
+        if (millis() > relay_ontime) 
+        {
+          digitalWrite(PC13, HIGH);
+          #ifdef DEBUG
+           Serial.print("_");   
+           #endif
+        }
+      }
+      relay_timer = relay_timer + 500;
     }
-  }
 }
 
 

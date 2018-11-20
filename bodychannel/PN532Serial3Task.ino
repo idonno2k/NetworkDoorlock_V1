@@ -1,4 +1,5 @@
 #ifdef PN532_ENABLE
+//#define DEBUG_PN532
 
 #include <PN532_HSU.h>
 #include <PN532.h>
@@ -11,7 +12,7 @@ PN532 nfc(pn532hsu);
 void vPN532Serial3Task_setup(void) 
 {
   
-  #ifdef DEBUG
+  #ifdef DEBUG_PN532
   Serial.println("PN532_serial3_setup...");
   #endif
   nfc.begin();
@@ -23,20 +24,17 @@ void vPN532Serial3Task_setup(void)
   }
   
   // Got ok data, print it out!
-  #ifdef DEBUG
+  #ifdef DEBUG_PN532
   Serial.print("Found chip PN5"); Serial.println((versiondata>>24) & 0xFF, HEX); 
   Serial.print("Firmware ver. "); Serial.print((versiondata>>16) & 0xFF, DEC); 
   Serial.print('.'); Serial.println((versiondata>>8) & 0xFF, DEC);
   #endif
-  
-  // Set the max number of retry attempts to read from a card
-  // This prevents us from waiting forever for a card, which is
-  // the default behaviour of the PN532.
+
   nfc.setPassiveActivationRetries(0xFF);
   
   // configure board to read RFID tags
   nfc.SAMConfig();
-  #ifdef DEBUG
+  #ifdef DEBUG_PN532
   Serial.println("Waiting for an ISO14443A card");
   #endif
 }
@@ -57,7 +55,7 @@ void vPN532Serial3Task(void)
   
     if (success) 
     {
-      #ifdef DEBUG
+      #ifdef DEBUG_PN532
       Serial.println("Found a card!");
       Serial.print("UID Length: ");Serial.print(uidLength, DEC);Serial.println(" bytes");
       Serial.print("UID Value: ");
@@ -68,18 +66,21 @@ void vPN532Serial3Task(void)
       Serial.println("");
       #endif
 
+      #ifdef DEBUG_PN532
      // Serial.print(rfid_event, HEX);
-
+      #endif
      vSDCardUidDateLoad(uid) ;
     }
     else
     {
-      #ifdef DEBUG
+      #ifdef DEBUG_PN532
       // PN532 probably timed out waiting for a card
       //Serial.println("Timed out waiting for a card");
       #endif
     }
-	//Serial.print(".");
+     #ifdef DEBUG_PN532
+  	//Serial.print(".");
+    #endif
     rfid_timer = millis() + 1000;
     
   }                 // wait for a second

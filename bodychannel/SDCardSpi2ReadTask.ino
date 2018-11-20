@@ -1,4 +1,5 @@
 #ifdef SDCARD_ENABLE
+//#define DEBUG_SDCARD
 
 #include <SPI.h>
 #include <SD.h>
@@ -11,23 +12,20 @@ SdFile root;
 void vSDCardSpi2ReadTask_setup(void) 
 {
 
-	#ifdef DEBUG
+	#ifdef DEBUG_SDCARD
 	Serial.println(F("SD Read Task..."));
 	Serial.print(F("Initializing SD card...\n"));
 	#endif
 
-	Serial.println("Initializing SD card...");
 	if (!SD.begin(PB12))
 	{
 		Serial.println("initialization failed!");
 		while (1);
 	}
-	Serial.println("initialization done.");
-
   
 	if (!card.init(SPI_HALF_SPEED, PB12)) 
 	{
-		#ifdef DEBUG
+		#ifdef DEBUG_SDCARD
 		Serial.println(F("initialization failed. Things to check:"));
 		Serial.println(F("* is a card inserted?"));
 		Serial.println(F("* is your wiring correct?"));
@@ -37,12 +35,12 @@ void vSDCardSpi2ReadTask_setup(void)
 	} 
 	else 
 	{
-		#ifdef DEBUG
+		#ifdef DEBUG_SDCARD
 		Serial.println(F("Wiring is correct and a card is present."));
 		#endif
 	}
 
-	#ifdef DEBUG
+	#ifdef DEBUG_SDCARD
 	Serial.println();
 	Serial.print("Card type:         ");
 	switch (card.type()) {
@@ -66,13 +64,13 @@ void vSDCardFolder(String ns )
 	//Serial.println(ns);    
 	if (SD.exists(ns))
 	{
-		#ifdef DEBUG
+		#ifdef DEBUG_SDCARD
 		//Serial.println("folder ok"); 
 		#endif		
 	}
 	else
 	{
-		#ifdef DEBUG
+		#ifdef DEBUG_SDCARD
 		//Serial.println("folder no");    
 		SD.mkdir(ns);
 		#endif
@@ -103,85 +101,98 @@ void vSDCardFile(String ns , String divi)
 	}
  }
 
-String IP_Path = "IP";
-String SettingPath = "SET";
-/*void vSDCardSetDate( String sDate ) 
-{
-  if (SD.exists(SettingPath))
-    SD.remove(SettingPath);
-  
-  File myFile;
-  myFile = SD.open(SettingPath, FILE_WRITE);
-  myFile.print(sDate);
-  myFile.close();
-}*/
-
+String IpPath = "IP";
+String SetPath = "SET";
+String MacPath = "MAC";
+String SetDateStr = "0"; 
 void vSDCardSetDateLoad( ) 
 {
 	File myFile;
-	int StringDec;
-	char StringChar;
 
-	SetDateStr = "0"; 
-	IPDateStr = "0"; 
-	if (SD.exists(IP_Path))  
+	SetDateStr = ""; 
+	if (SD.exists(MacPath))  
 	{
-		myFile = SD.open(IP_Path);
-		IPDateStr = "";
+		myFile = SD.open(MacPath);
 		if (myFile) 
 		{
 			while (myFile.available()) 
 			{
-				//StringDec = (int)(myFile.read());
-				//StringChar = (char)StringDec;   
-				//IPDateStr = IPDateStr + StringChar;
-
-       IPDateStr += (char)(myFile.read());
+				SetDateStr += (char)(myFile.read());
 			}
+			SetDateStr += "\0";
 			myFile.close();
+
+			String sss ;
+			sss = SetDateStr.substring(0,2);  mymac[0] = (uint8_t)strtoul( sss.c_str(), NULL, 16);
+			sss = SetDateStr.substring(3,5);  mymac[1] = (uint8_t)strtoul( sss.c_str(), NULL, 16);
+			sss = SetDateStr.substring(6,8);  mymac[2] = (uint8_t)strtoul( sss.c_str(), NULL, 16);
+			sss = SetDateStr.substring(9,11); mymac[3] = (uint8_t)strtoul( sss.c_str(), NULL, 16);
+			sss = SetDateStr.substring(12,14);mymac[4] = (uint8_t)strtoul( sss.c_str(), NULL, 16);
+			sss = SetDateStr.substring(15,17);mymac[5] = (uint8_t)strtoul( sss.c_str(), NULL, 16);
+
 		} 
-    static_IP = IPDateStr.charAt(0);
-    if(static_IP == '1')
-    {
-      uint8_t offset = 1;
-      uint8_t length;
-      String ip ;
-      length = IPDateStr.indexOf("\n",offset);  ip = IPDateStr.substring(offset,length); ether.parseIp(myip ,(char*)ip.c_str()); offset = offset + length;
-      length = IPDateStr.indexOf("\n",offset);  ip = IPDateStr.substring(offset,length); ether.parseIp(maskip ,(char*)ip.c_str()); offset = offset + length;
-      length = IPDateStr.indexOf("\n",offset);  ip = IPDateStr.substring(offset,length); ether.parseIp(gwip ,(char*)ip.c_str()); offset = offset + length;
-      length = IPDateStr.indexOf("\n",offset);  ip = IPDateStr.substring(offset,length); ether.parseIp(dnsip ,(char*)ip.c_str()); offset = offset + length;
+	}
+
+  SetDateStr = ""; 
+	if (SD.exists(IpPath))  
+	{
+  	myFile = SD.open(IpPath);
+		if (myFile) 
+		{
+			while (myFile.available()) 
+			{
+				SetDateStr += (char)(myFile.read());
+			}
+			SetDateStr += "\0";
+			myFile.close();
     }
+    
+   // String cc = SetDateStr.substring(0,1);delay(10);
+    //static_IP = (uint8_t)strtoul( cc.c_str(), NULL, 10);delay(10);
+    //Serial.println(static_IP);  
+    if(static_IP == 1)
+    {
+       Serial.println("test");   
+      //uint16_t offset = 1;        uint16_t end_offset;        String ip ;
+      //end_offset = SetDateStr.indexOf("\n",offset);  ip = SetDateStr.substring(offset,end_offset); ether.parseIp(myip ,(char*)ip.c_str()); offset =  end_offset + 1;
+      //end_offset = SetDateStr.indexOf("\n",offset);  ip = SetDateStr.substring(offset,end_offset); ether.parseIp(maskip ,(char*)ip.c_str()); offset = end_offset + 1;
+      //end_offset = SetDateStr.indexOf("\n",offset);  ip = SetDateStr.substring(offset,end_offset); ether.parseIp(gwip ,(char*)ip.c_str()); offset = end_offset + 1;
+      //end_offset = SetDateStr.indexOf("\0",offset);  ip = SetDateStr.substring(offset,end_offset); ether.parseIp(dnsip ,(char*)ip.c_str());
+   	} 
+
 	}
 
-	if (SD.exists(SettingPath))  
+  SetDateStr = ""; 
+	if (SD.exists(SetPath))  
 	{
-		myFile = SD.open(SettingPath);
-		SetDateStr = "";
+		myFile = SD.open(SetPath);
 		if (myFile) 
 		{
 			while (myFile.available()) 
 			{
-        SetDateStr += (char)(myFile.read());
+				SetDateStr += (char)(myFile.read());
 			}
+			SetDateStr += "\0";
 			myFile.close();
 
-      uint8_t offset = 0;      uint8_t length;      String s ;
-      length = IPDateStr.indexOf("\n",offset);  s = IPDateStr.substring(offset,length); offset = offset + length;
+			//Serial.println(SetDateStr);   
 
-      uint8_t idx = 0;      uint8_t len;      String s1;
-      len = s.indexOf("/",0);     s1 = s.substring(idx,len);  s1.toCharArray(website,len); idx = idx + len;
-      len = s.indexOf("\0",idx);  s1 = s.substring(idx,len);  s1.toCharArray(suburl,len);   
-      
-      length = IPDateStr.indexOf("\n",offset);  s = IPDateStr.substring(offset,length); s.toCharArray(device_name,length); offset = offset + length;
-      length = IPDateStr.indexOf("\n",offset);  s = IPDateStr.substring(offset,length); s.toCharArray(device_serial,length); offset = offset + length;
-      length = IPDateStr.indexOf("\n",offset);  s = IPDateStr.substring(offset,length); RelayOpTime = (uint16_t)(strtoul( s.c_str(), NULL, 10)*1000);  offset = offset + length;
-      length = IPDateStr.indexOf("\n",offset);  s = IPDateStr.substring(offset,length); FireVoltage = (uint16_t)strtoul( s.c_str(), NULL, 10);
-    
+			uint16_t from = 0;      uint16_t to;      String s0 = "";
+			to = SetDateStr.indexOf("\n",from);  s0 = SetDateStr.substring(from,to); from =  to + 1; //Serial.println(s0);   
+
+			uint16_t idx = 0;      uint16_t edx;      String s1="";
+			edx = s0.indexOf("/",7);     s1 = s0.substring(idx + 7, edx);         s1.toCharArray(website,edx); idx =  edx; //Serial.print(website);   
+			edx = s0.indexOf("\0",idx);  s1 = s0.substring(idx, edx + idx + 2);   s1.toCharArray(suburl,edx + 2);   //Serial.println(suburl);   
+
+			to = SetDateStr.indexOf("\n",from);  s0 = SetDateStr.substring(from,to); s0.toCharArray(device_name,to);  from =  to + 1;    //Serial.println(device_name);   
+			to = SetDateStr.indexOf("\n",from);  s0 = SetDateStr.substring(from,to); s0.toCharArray(device_serial,to);  from = to + 1;   //Serial.println(device_serial);  
+			to = SetDateStr.indexOf("\n",from);  s0 = SetDateStr.substring(from,to); RelayONTime = (uint16_t)(strtoul( s0.c_str(), NULL, 10)*1000);  from = to + 1;  //Serial.println(RelayOpTime);  
+			//to = SetDateStr.indexOf("\0",from-5);
+			s0 = SetDateStr.substring(from,from + 2); FireVoltage = (uint16_t)strtoul( s0.c_str(), NULL, 10);  //Serial.println(FireVoltage);  
+
 		} 
 	}
-
-	
-  
+ 
 }
 
 
@@ -213,10 +224,6 @@ void vSDCardSyncDateLoad( )
 			// read from the file until there's nothing else in it:
 			while (myFile.available()) 
 			{
-				//StringDec = (int)(myFile.read());
-				//StringChar = (char)StringDec;   
-				//SyncDateStr = SyncDateStr + StringChar;
-
        SyncDateStr += (char)(myFile.read());
 			}
 
@@ -226,7 +233,7 @@ void vSDCardSyncDateLoad( )
   
 }
 
-String authUid;
+String authUid = "0";
 void vSDCardUidDateLoad(uint8_t * uid ) 
 {
 	File myFile;
@@ -246,7 +253,9 @@ void vSDCardUidDateLoad(uint8_t * uid )
 
 	String pathStr = folder01 + "/" + folder02 + "/" + folderFile;
     
-	Serial.println((const char*)pathStr.c_str());       
+	//Serial.println((const char*)pathStr.c_str());       
+
+setEvent(&ActiveEvent , RFID_DONE);
 
 	if (SD.exists(pathStr))
 	{
@@ -259,27 +268,27 @@ void vSDCardUidDateLoad(uint8_t * uid )
 			while (myFile.available()) 
 			{
 				authUid += (char)(myFile.read());
-
-				//StrDec = (int)(myFile.read());
-				//StrChar = (char)StrDec;   
-				//authUid = authUid + StrChar;
 			}
 			myFile.close();
 		}
 		Serial.println((const char*)authUid.c_str());     
 
-    setEvent(&ActiveEvent , RFID_DONE);
+    //setEvent(&ActiveEvent , RFID_DONE);
 	}
 	else
 	{
-		Serial.println("permission denied...");   
-		// vSDCardFolder(folder01 + "/" + folder02);
-		// vSDCardFile(folder01 + "/" + folder02 + "/" + folderFile , "y");   
+     #ifdef DEBUG_SDCARD
+		//Serial.println("permission denied...");   
+    #endif
+    #if 0
+		 vSDCardFolder(folder01 + "/" + folder02);
+		 vSDCardFile(folder01 + "/" + folder02 + "/" + folderFile , "y");   
 
-		//  File myFile;
-		//   myFile = SD.open(folder01 + "/" + folder02 + "/" + folderFile, FILE_WRITE);
-		//   myFile.print("y");
-		//   myFile.close();  
+		  File myFile;
+		   myFile = SD.open(folder01 + "/" + folder02 + "/" + folderFile, FILE_WRITE);
+		   myFile.print("y");
+		   myFile.close();  
+    #endif
 	}
 }
 
