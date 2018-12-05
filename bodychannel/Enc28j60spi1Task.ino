@@ -220,7 +220,9 @@ static void SyncData_callback (byte status, uint16_t off, uint16_t len)
 				String FileState = String(sa);     
 
 				vSDCardFolder(folder01 + "/" + folder02);
-				vSDCardFile(folder01 + "/" + folder02 + "/" + folderFile , FileState);                   
+				vSDCardFile(folder01 + "/" + folder02 + "/" + folderFile , FileState);     
+
+         vPN532Serial3Task();             
 
 			}
       #ifdef DEBUG_ENC28J60
