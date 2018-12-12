@@ -1,0 +1,11 @@
+로그 관련
+LOG 폴더 내부에 기록
+
+1시간마다 서버로 전송
+서버로 전송 URL은 SET 파일의 6줄에 기록
+
+서버로 전송시 1건씩 전송
+URL?log=시간&rf=RF번호&dn=device_name&ds=device_serial
+
+성공시 y 리턴
+
