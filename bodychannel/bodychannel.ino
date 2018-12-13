@@ -1,4 +1,4 @@
-//#define DEBUG
+#define DEBUG
 #define ENC28J60_ENABLE
 #define PN532_ENABLE
 #define SDCARD_ENABLE
@@ -77,6 +77,8 @@ void setup()
     
     vPN532Serial3Task_setup();      delay(100);
     vEnc28j60spi1Task_setup();      delay(100);
+	
+	 rtc_setup();                    delay(100);
 
    //xTaskCreate(vPN532Serial3Task,"Task3", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1,  NULL);
    //xTaskCreate(vEnc28j60spi1Task,"Task4", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 3,  NULL);
@@ -93,8 +95,10 @@ void loop()
 	vEnc28j60spi1Task();
 
 	vPN532Serial3Task(); 
+	
+	vRTCTask();
 
-  vEventTask(); 
+	vEventTask(); 
 }
 
 

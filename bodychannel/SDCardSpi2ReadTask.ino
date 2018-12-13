@@ -1,5 +1,5 @@
 #ifdef SDCARD_ENABLE
-//#define DEBUG_SDCARD
+#define DEBUG_SDCARD
 
 #include <SPI.h>
 #include <SD.h>

@@ -1,5 +1,5 @@
 #ifdef PN532_ENABLE
-//#define DEBUG_PN532
+#define DEBUG_PN532
 
 #include <PN532_HSU.h>
 #include <PN532.h>

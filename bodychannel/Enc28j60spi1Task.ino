@@ -1,5 +1,5 @@
 #ifdef ENC28J60_ENABLE
-//#define DEBUG_ENC28J60
+#define DEBUG_ENC28J60
 
 #include <SPI.h>
 #include <EtherCard_STM.h>
