@@ -69,7 +69,8 @@ void vPN532Serial3Task(void)
       #ifdef DEBUG_PN532
      // Serial.print(rfid_event, HEX);
       #endif
-     vSDCardUidDateLoad(uid) ;
+      vSDCardUidDateLoad(uid) ;
+      vSDCardLogDate(uid) ;
     }
     else
     {

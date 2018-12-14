@@ -7,6 +7,7 @@ time_t tt, tt1;
 tm_t mtt;
 uint8_t dateread[11];
 
+String LogDateStr = ""; 
 //-----------------------------------------------------------------------------
 const char * weekdays[] = {"Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"};
 const char * months[] = {"Dummy", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
@@ -74,9 +75,8 @@ void rtc_setup()
   rtclock.attachSecondsInterrupt(SecondCount);// Call SecondCount
 }
 
-
-
-void vRTCTask() 
+String lastLogPath="";
+void rtc_loop() 
 {
  /* 
   if ( Serial.available()>10 ) {
@@ -88,13 +88,38 @@ void vRTCTask()
     rtclock.setTime(rtclock.TimeZone(tt, timezone)); //adjust to your local date
   }
 */
-  
+
+  char currLogPath[128]; 
   if (tt >= tt1)//log
   {
-     tt1 = tt + 3600;
+     tt1 = tt + 60;
     // get and print actual RTC timestamp
     rtclock.breakTime(rtclock.now(), mtt);
-    sprintf(s, "\nlog - %s %u %u, %s, %02u:%02u:%02u\n", months[mtt.month], mtt.day, mtt.year+1970, weekdays[mtt.weekday], mtt.hour, mtt.minute, mtt.second);
-    Serial.print(s);
+    //sprintf(s, "\nlog - %s %u %u, %s, %02u:%02u:%02u\n", months[mtt.month], mtt.day, mtt.year+1970, weekdays[mtt.weekday], mtt.hour, mtt.minute, mtt.second);
+    sprintf(currLogPath, "log_%u%u%u",mtt.year+1970, mtt.month, mtt.day, mtt.hour);
+    
+    Serial.print(currLogPath);
+
+    if(mtt.minute == 0)
+    {
+       vSDCardLogRead(lastLogPath )  ;
+
+        byte sd = stash.create();
+        stash.println(LogDateStr.c_str() );
+        stash.save();
+
+        Stash::prepare(PSTR("POST http://$F/$F" "\r\n"
+            "Host: $F" "\r\n"
+            "Content-Length: $D" "\r\n"
+            "Content-Type: application/x-www-form-urlencoded" "\r\n"
+            "\r\n"/*이것때문에 안된거였음 헐~~*/
+            "$H"),
+            website,suburl,stash.size(),sd);
+
+        ether.tcpSend();
+     
+     }
+     lastLogPath = "";
+     lastLogPath = currLogPath;
   }
 }

@@ -4,6 +4,8 @@
 #include <SPI.h>
 #include <EtherCard_STM.h>
 
+
+
 static uint32_t ethernet_timer;
 
 static uint8_t static_IP = 0; 

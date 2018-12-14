@@ -195,6 +195,50 @@ void vSDCardSetDateLoad( )
  
 }
 
+void vSDCardLogDate(uint8_t * uid ) 
+{
+  char logPath[128]; 
+  char logData[128]; 
+  char StringChar[20]; 
+
+   rtclock.breakTime(rtclock.now(), mtt);
+   sprintf(logPath, "log_%u%u%u",mtt.year+1970, mtt.month, mtt.day, mtt.hour);
+   sprintf(logData, "%s %u %u, %s, %02u:%02u:%02u : ", months[mtt.month], mtt.day, mtt.year+1970, weekdays[mtt.weekday], mtt.hour, mtt.minute, mtt.second);
+   sprintf(StringChar,"%02X%02X%02X%02X", uid[0],uid[1],uid[2],uid[3]);
+   //Serial.print(logPath);
+
+  File myFile;
+  myFile = SD.open(logPath, FILE_WRITE);
+  myFile.seek(myFile.size());
+  myFile.print(logData);
+  myFile.print(StringChar);
+  myFile.close();
+}
+
+
+void vSDCardLogRead(String logPath ) 
+{
+  File myFile;
+ 
+//   rtclock.breakTime(rtclock.now(), mtt);
+//   sprintf(logPath, "log_%u%u%u",mtt.year+1970, mtt.month, mtt.day, mtt.hour);
+
+  if (SD.exists(logPath))  
+  {
+    myFile = SD.open(logPath);
+    LogDateStr = "";
+    if (myFile) 
+    {
+      // read from the file until there's nothing else in it:
+      while (myFile.available()) 
+      {
+        LogDateStr += (char)(myFile.read());
+      }
+      myFile.close();
+    } 
+  }
+  
+}
 
 String SyncPath = "SYNCDATE";
 void vSDCardSyncDate( String sDate ) 

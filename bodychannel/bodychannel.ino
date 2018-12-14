@@ -35,24 +35,24 @@ void vEventTask(void)
       {
         relay_ontime = millis() + RelayONTime;
         clearEvent(&ActiveEvent ,RFID_DONE);
-        digitalWrite(PC13, LOW);
+        digitalWrite(PB9, LOW);
         #ifdef DEBUG
         Serial.print("-");   
         #endif
       }
       else if((ActiveEvent & FIRE_ON) == FIRE_ON)
       {
-        digitalWrite(PC13, LOW);
+        digitalWrite(PB9, LOW);
       }
       else if((ActiveEvent & REMOTE_ON) == REMOTE_ON)
       {
-        digitalWrite(PC13, LOW);
+        digitalWrite(PB9, LOW);
       }
       else
       {
         if (millis() > relay_ontime) 
         {
-          digitalWrite(PC13, HIGH);
+          digitalWrite(PB9, HIGH);
           #ifdef DEBUG
            Serial.print("_");   
            #endif
@@ -77,14 +77,15 @@ void setup()
     
     vPN532Serial3Task_setup();      delay(100);
     vEnc28j60spi1Task_setup();      delay(100);
-	
-	 rtc_setup();                    delay(100);
+
+    rtc_setup();                    delay(100);
 
    //xTaskCreate(vPN532Serial3Task,"Task3", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1,  NULL);
    //xTaskCreate(vEnc28j60spi1Task,"Task4", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 3,  NULL);
    //vTaskStartScheduler();
-    pinMode(PC13, OUTPUT);
-    digitalWrite(PC13, LOW);delay(100);
+    pinMode(PC13, OUTPUT);    digitalWrite(PC13, LOW);delay(100);//led
+    pinMode(PB9, OUTPUT);    digitalWrite(PB9, LOW);delay(100);//relay
+    pinMode(PB7, OUTPUT);    delay(100);//buzzer
 
     relay_timer = millis();
 }
@@ -95,10 +96,10 @@ void loop()
 	vEnc28j60spi1Task();
 
 	vPN532Serial3Task(); 
-	
-	vRTCTask();
 
-	vEventTask(); 
+  //vRTCTask();
+  //rtc_loop();
+  vEventTask(); 
 }
 
 
