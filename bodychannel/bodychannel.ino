@@ -14,6 +14,11 @@ static char device_serial[] = "2000";
 uint16_t RelayONTime = 3000;
 uint8_t FireVoltage = 24;
 
+#define relay_pin PB9
+#define buzzer_pin PB7
+#define led2_pin PC13
+#define led1_pin PB6
+
 enum etherState
 {
     SyncIdle, SyncInit, SyncData
@@ -35,24 +40,24 @@ void vEventTask(void)
       {
         relay_ontime = millis() + RelayONTime;
         clearEvent(&ActiveEvent ,RFID_DONE);
-        digitalWrite(PB9, LOW);
+        digitalWrite(relay_pin, HIGH);
         #ifdef DEBUG
         Serial.print("-");   
         #endif
       }
       else if((ActiveEvent & FIRE_ON) == FIRE_ON)
       {
-        digitalWrite(PB9, LOW);
+        digitalWrite(relay_pin, HIGH);
       }
       else if((ActiveEvent & REMOTE_ON) == REMOTE_ON)
       {
-        digitalWrite(PB9, LOW);
+        digitalWrite(relay_pin, HIGH);
       }
       else
       {
         if (millis() > relay_ontime) 
         {
-          digitalWrite(PB9, HIGH);
+          digitalWrite(relay_pin, LOW);
           #ifdef DEBUG
            Serial.print("_");   
            #endif
@@ -61,7 +66,6 @@ void vEventTask(void)
       relay_timer = relay_timer + 500;
     }
 }
-
 
 // the setup function runs once when you press reset or power the board
 void setup() 
@@ -83,9 +87,9 @@ void setup()
    //xTaskCreate(vPN532Serial3Task,"Task3", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1,  NULL);
    //xTaskCreate(vEnc28j60spi1Task,"Task4", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 3,  NULL);
    //vTaskStartScheduler();
-    pinMode(PC13, OUTPUT);    digitalWrite(PC13, LOW);delay(100);//led
-    pinMode(PB9, OUTPUT);    digitalWrite(PB9, LOW);delay(100);//relay
-    pinMode(PB7, OUTPUT);    delay(100);//buzzer
+    pinMode(led2_pin, OUTPUT);    digitalWrite(led2_pin, LOW);delay(100);//led
+    pinMode(relay_pin, OUTPUT);    digitalWrite(relay_pin, LOW);delay(100);//relay
+    pinMode(buzzer_pin, OUTPUT);    delay(100);//buzzer
 
     relay_timer = millis();
 }

@@ -9,9 +9,12 @@
 static uint32_t ethernet_timer;
 
 static uint8_t static_IP = 0; 
-static char website[]  = "body.ibuild.kr";
-static char suburl[]  = "/door_control/sync.php";
+//static char website[]  = "body.ibuild.kr";
+//static char suburl[]  = "/door_control/sync.php";
 static uint8_t mymac[6] = { 0x74,0x69,0x69,0x2D,0x30,0x31 };
+static char website[]  = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+static char suburl[]  = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+
 static uint8_t myip[4];   ///< IP address
 static uint8_t maskip[4]; ///< Netmask
 static uint8_t gwip[4];   ///< Gateway
@@ -28,7 +31,7 @@ void vEnc28j60spi1Task_setup(void)
 	#ifdef DEBUG_ENC28J60
 	Serial.println(F("Enc28j60 spi1 Task..."));
 	#endif
-
+    
 	afio_cfg_debug_ports(AFIO_DEBUG_SW_ONLY); // release PB3 and PB5 
 	afio_remap(AFIO_REMAP_SPI1); // remap SPI1
 	if (ether.begin(sizeof Ethernet::buffer, mymac,PA15) == 0)
@@ -225,10 +228,10 @@ static void SyncData_callback (byte status, uint16_t off, uint16_t len)
 				String FileState = String(sa);     
 
 				vSDCardFolder(folder01 + "/" + folder02);
-				vSDCardFile(folder01 + "/" + folder02 + "/" + folderFile , FileState);     
-
-         vPN532Serial3Task();             
-
+				vSDCardFile(folder01 + "/" + folder02 + "/" + folderFile , FileState);                   
+        
+        vPN532Serial3Task();
+        
 			}
       #ifdef DEBUG_ENC28J60
 			Serial.println("");

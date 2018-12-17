@@ -3,11 +3,10 @@
 #include <RTClock.h>
 
 RTClock rtclock (RTCSEL_LSE); // initialise
-
-int timezone = 0;      // change to your timezone
+//uint32_t tt; 
+int timezone = 8;      // change to your timezone
 time_t tt, tt1;
 tm_t mtt;
-
 uint8_t dateread[11];
 
 String LogDateStr = ""; 
@@ -27,6 +26,7 @@ char s[128]; // for sprintf
 //-----------------------------------------------------------------------------
 void ParseBuildTimestamp()
 {
+
     // Timestamp format: "Dec  8 2017, 22:57:54"
     sprintf(s, "Timestamp: %s, %s\n", __DATE__, __TIME__);
     //Serial.print(s);
