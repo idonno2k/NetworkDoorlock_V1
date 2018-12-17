@@ -137,6 +137,9 @@ static void SyncInit_callback (byte status, uint16_t off, uint16_t len)
 	Serial.print(SyncDateStrNew);
 	Serial.println("");
   #endif
+
+  RtcTimeSet(SyncDateStrNew);  
+  
 	ethernet_timer = millis() + 100;
 }
 

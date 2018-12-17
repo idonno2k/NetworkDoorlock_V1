@@ -13,7 +13,6 @@ void vSDCardSpi2ReadTask_setup(void)
 {
 
 	#ifdef DEBUG_SDCARD
-	Serial.println(F("SD Read Task..."));
 	Serial.print(F("Initializing SD card...\n"));
 	#endif
 
@@ -195,20 +194,24 @@ void vSDCardSetDateLoad( )
  
 }
 
+String LogFolder = "LOG";
 void vSDCardLogDate(uint8_t * uid ) 
 {
-  char logPath[128]; 
+  char logFilename[128]; 
   char logData[128]; 
   char StringChar[20]; 
 
    rtclock.breakTime(rtclock.now(), mtt);
-   sprintf(logPath, "log_%u%u%u",mtt.year+1970, mtt.month, mtt.day, mtt.hour);
+   sprintf(logFilename, "log_%u%u%u",mtt.year+1970, mtt.month, mtt.day, mtt.hour);
    sprintf(logData, "%s %u %u, %s, %02u:%02u:%02u : ", months[mtt.month], mtt.day, mtt.year+1970, weekdays[mtt.weekday], mtt.hour, mtt.minute, mtt.second);
    sprintf(StringChar,"%02X%02X%02X%02X", uid[0],uid[1],uid[2],uid[3]);
    //Serial.print(logPath);
 
+  vSDCardFolder("LogFolder");
+
+  String logFile = logFilename;
   File myFile;
-  myFile = SD.open(logPath, FILE_WRITE);
+  myFile = SD.open(LogFolder +"/"+logFile, FILE_WRITE);
   myFile.seek(myFile.size());
   myFile.print(logData);
   myFile.print(StringChar);

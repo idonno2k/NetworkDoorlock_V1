@@ -97,8 +97,8 @@ void loop()
 
 	vPN532Serial3Task(); 
 
-  //vRTCTask();
-  //rtc_loop();
+  vRTCTask();
+
   vEventTask(); 
 }
 
