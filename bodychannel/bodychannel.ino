@@ -3,67 +3,79 @@
 #define PN532_ENABLE
 #define SDCARD_ENABLE
 
+#include <RTClock.h>
 
-String SyncDateStr = "0"; 
-String SyncDateStrNew = "0"; 
+RTClock rtclock (RTCSEL_LSE); // initialise
+//-----------------------------------------------------------------------------
+const char * weekdays[] = {"Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"};
+const char * months[] = {"Dummy", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
+//-----------------------------------------------------------------------------
 
-//#include <MapleFreeRTOS900.h>
 
-static char device_name[]  = "67CU65SU7LGE64SQIOuNsOuqqA==";
-static char device_serial[] = "2000";
+//============================================
+//extern
+extern String strLogDate; 
+extern String strSyncDate; 
+extern String strSyncDateNew; 
+
+extern tm_t logTimeStamp;
+
+
+//============================================
+//global
+
 uint16_t RelayONTime = 3000;
 uint8_t FireVoltage = 24;
 
-#define relay_pin PB9
-#define buzzer_pin PB7
-#define led2_pin PC13
-#define led1_pin PB6
-
-enum etherState
-{
-    SyncIdle, SyncInit, SyncData
-};
-etherState etherStep = SyncIdle;
+#define RELAY_PIN PB9
+#define BUZZ_PIN PB7
+#define LED2_PIN PC13
+#define LED1_PIN PB6
+#define FIRE_PIN PB8
 
 #define RFID_DONE ( 1 << 0 )
 #define FIRE_ON ( 1 << 1 )
 #define REMOTE_ON ( 1 << 2 )
 static uint8_t ActiveEvent = 0;
-static uint32_t relay_timer = 0;
-static uint32_t relay_ontime = 0;
+static uint32_t RelayTimer = 0;
+static uint32_t RelayOntime = 0;
 
 void vEventTask(void) 
 {
-    if (millis() > relay_timer) 
+	if (digitalRead(FIRE_PIN) == HIGH)setEvent(&ActiveEvent ,FIRE_ON);
+	else	clearEvent(&ActiveEvent ,FIRE_ON);
+
+    if (millis() > RelayTimer) 
     {
+
       if((ActiveEvent & RFID_DONE) == RFID_DONE)
       {
-        relay_ontime = millis() + RelayONTime;
+        RelayOntime = millis() + RelayONTime;
         clearEvent(&ActiveEvent ,RFID_DONE);
-        digitalWrite(relay_pin, HIGH);
+        digitalWrite(RELAY_PIN, HIGH);
         #ifdef DEBUG
         Serial.print("-");   
         #endif
       }
       else if((ActiveEvent & FIRE_ON) == FIRE_ON)
       {
-        digitalWrite(relay_pin, HIGH);
+        digitalWrite(RELAY_PIN, HIGH);
       }
       else if((ActiveEvent & REMOTE_ON) == REMOTE_ON)
       {
-        digitalWrite(relay_pin, HIGH);
+        digitalWrite(RELAY_PIN, HIGH);
       }
       else
       {
-        if (millis() > relay_ontime) 
+        if (millis() > RelayOntime) 
         {
-          digitalWrite(relay_pin, LOW);
+          digitalWrite(RELAY_PIN, LOW);
           #ifdef DEBUG
            Serial.print("_");   
            #endif
         }
       }
-      relay_timer = relay_timer + 500;
+      RelayTimer = RelayTimer + 500;
     }
 }
 
@@ -77,21 +89,19 @@ void setup()
 
     vSDCardSpi2ReadTask_setup();    delay(100);    
     vSDCardSyncDateLoad();          delay(100);
-    vSDCardSetDateLoad() ;          delay(100);
+    vSDCardSetParmLoad() ;          delay(100);
     
     vPN532Serial3Task_setup();      delay(100);
     vEnc28j60spi1Task_setup();      delay(100);
 
     rtc_setup();                    delay(100);
 
-   //xTaskCreate(vPN532Serial3Task,"Task3", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1,  NULL);
-   //xTaskCreate(vEnc28j60spi1Task,"Task4", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 3,  NULL);
-   //vTaskStartScheduler();
-    pinMode(led2_pin, OUTPUT);    digitalWrite(led2_pin, LOW);delay(100);//led
-    pinMode(relay_pin, OUTPUT);    digitalWrite(relay_pin, LOW);delay(100);//relay
-    pinMode(buzzer_pin, OUTPUT);    delay(100);//buzzer
+    pinMode(LED2_PIN, OUTPUT);    digitalWrite(LED2_PIN, LOW);delay(100);//led
+    pinMode(RELAY_PIN, OUTPUT);    digitalWrite(RELAY_PIN, LOW);delay(100);//relay
+    pinMode(BUZZ_PIN, OUTPUT);    delay(100);//buzzer
+    pinMode(FIRE_PIN, INPUT);    delay(100);//fire alert
 
-    relay_timer = millis();
+    RelayTimer = millis();
 }
 
 // the loop function runs over and over again forever
@@ -101,9 +111,9 @@ void loop()
 
 	vPN532Serial3Task(); 
 
-  vRTCTask();
+	vRTCTask();
 
-  vEventTask(); 
+	vEventTask(); 
 }
 
 

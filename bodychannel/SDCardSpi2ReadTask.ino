@@ -8,6 +8,20 @@ Sd2Card card;
 SdVolume volume;
 SdFile root;
 
+String strAuthUid = "ABCDEFGH";
+String strSyncPath = "SYNCDATE";
+String strIpPath = "IP";
+String strSetPath = "SET";
+String strMacPath = "MAC";
+String strSetDate = "20181219000000"; 
+String strLogDate = ""; 
+
+String strSyncDate = "0"; 
+String strSyncDateNew = "0"; 
+
+static char arrDeviceName[]  = "67CU65SU7LGE64SQIOuNsOuqqA==";
+static char arrDeviceSerial[] = "2000";
+
 //byte tmpBuf[512];
 void vSDCardSpi2ReadTask_setup(void) 
 {
@@ -43,10 +57,10 @@ void vSDCardSpi2ReadTask_setup(void)
 	Serial.println();
 	Serial.print("Card type:         ");
 	switch (card.type()) {
-	case SD_CARD_TYPE_SD1:      Serial.println("SD1");      break;
-	case SD_CARD_TYPE_SD2:      Serial.println("SD2");      break;
-	case SD_CARD_TYPE_SDHC:     Serial.println("SDHC");     break;
-	default:      Serial.println("Unknown");
+		case SD_CARD_TYPE_SD1:      Serial.println("SD1");      break;
+		case SD_CARD_TYPE_SD2:      Serial.println("SD2");      break;
+		case SD_CARD_TYPE_SDHC:     Serial.println("SDHC");     break;
+		default:      Serial.println("Unknown");
 	}
 	#endif
 
@@ -100,215 +114,219 @@ void vSDCardFile(String ns , String divi)
 	}
  }
 
-String IpPath = "IP";
-String SetPath = "SET";
-String MacPath = "MAC";
-String SetDateStr = "0"; 
-void vSDCardSetDateLoad( ) 
+
+void vSDCardSetParmLoad( ) 
 {
 	File myFile;
 
-	SetDateStr = ""; 
-	if (SD.exists(MacPath))  
+	strSetDate = ""; 
+	if (SD.exists(strMacPath))  
 	{
-		myFile = SD.open(MacPath);
+		myFile = SD.open(strMacPath);
 		if (myFile) 
 		{
 			while (myFile.available()) 
 			{
-				SetDateStr += (char)(myFile.read());
+				strSetDate += (char)(myFile.read());
 			}
-			//SetDateStr += "\0";
+			//strSetDate += "\0";
 			myFile.close();
 
 			String sss ;
-			sss = SetDateStr.substring(0,2);  mymac[0] = (uint8_t)strtoul( sss.c_str(), NULL, 16);
-			sss = SetDateStr.substring(3,5);  mymac[1] = (uint8_t)strtoul( sss.c_str(), NULL, 16);
-			sss = SetDateStr.substring(6,8);  mymac[2] = (uint8_t)strtoul( sss.c_str(), NULL, 16);
-			sss = SetDateStr.substring(9,11); mymac[3] = (uint8_t)strtoul( sss.c_str(), NULL, 16);
-			sss = SetDateStr.substring(12,14);mymac[4] = (uint8_t)strtoul( sss.c_str(), NULL, 16);
-			sss = SetDateStr.substring(15,17);mymac[5] = (uint8_t)strtoul( sss.c_str(), NULL, 16);
+			sss = strSetDate.substring(0,2);  mymac[0] = (uint8_t)strtoul( sss.c_str(), NULL, 16);
+			sss = strSetDate.substring(3,5);  mymac[1] = (uint8_t)strtoul( sss.c_str(), NULL, 16);
+			sss = strSetDate.substring(6,8);  mymac[2] = (uint8_t)strtoul( sss.c_str(), NULL, 16);
+			sss = strSetDate.substring(9,11); mymac[3] = (uint8_t)strtoul( sss.c_str(), NULL, 16);
+			sss = strSetDate.substring(12,14);mymac[4] = (uint8_t)strtoul( sss.c_str(), NULL, 16);
+			sss = strSetDate.substring(15,17);mymac[5] = (uint8_t)strtoul( sss.c_str(), NULL, 16);
 
 		} 
 	}
 
-  SetDateStr = ""; 
-	if (SD.exists(IpPath))  
+	strSetDate = ""; 
+	if (SD.exists(strIpPath))  
 	{
-  	myFile = SD.open(IpPath);
+		myFile = SD.open(strIpPath);
 		if (myFile) 
 		{
 			while (myFile.available()) 
 			{
-				SetDateStr += (char)(myFile.read());
+				strSetDate += (char)(myFile.read());
 			}
-			//SetDateStr += "\0";
+			//strSetDate += "\0";
 			myFile.close();
-    }
-
+		}
 
     
+	    String cc = strSetDate.substring(0,1);delay(10);
+	    static_IP = (uint8_t)strtoul( cc.c_str(), NULL, 10);delay(10);
+	    Serial.println(static_IP); 
     
-    String cc = SetDateStr.substring(0,1);delay(10);
-    static_IP = (uint8_t)strtoul( cc.c_str(), NULL, 10);delay(10);
-    Serial.println(static_IP); 
-    
 
-    if(static_IP == 1)
-    {
-       Serial.println("test");   
-      uint16_t offset = 2;        uint16_t end_offset;        String ip ;   
-      uint16_t offset1 = 0;        uint16_t end_offset1;   String ip1 ;   
-      //Serial.println(SetDateStr);   
-      
-      //end_offset = SetDateStr.indexOf("\n",offset);  ip = SetDateStr.substring(offset,end_offset); ether.parseIp(myip ,(char*)ip.c_str()); offset =  end_offset + 1;    
-      //end_offset = SetDateStr.indexOf("\n",offset);  ip = SetDateStr.substring(offset,end_offset); ether.parseIp(maskip ,(char*)ip.c_str()); offset = end_offset + 1;
-      //end_offset = SetDateStr.indexOf("\n",offset);  ip = SetDateStr.substring(offset,end_offset); ether.parseIp(gwip ,(char*)ip.c_str()); offset = end_offset + 1;     
-      //end_offset = SetDateStr.indexOf("\n",offset);  ip = SetDateStr.substring(offset,end_offset); ether.parseIp(dnsip ,(char*)ip.c_str());
+		if(static_IP == 1)
+		{
+			Serial.println("test");   
+			uint16_t offset = 2;        uint16_t end_offset;        String ip ;   
+			uint16_t offset1 = 0;        uint16_t end_offset1;   String ip1 ;   
+			//Serial.println(strSetDate);   
 
-      /* IP */
-      end_offset = SetDateStr.indexOf("\n",offset);  ip = SetDateStr.substring(offset,end_offset); 
+			//end_offset = strSetDate.indexOf("\n",offset);  ip = strSetDate.substring(offset,end_offset); ether.parseIp(myip ,(char*)ip.c_str()); offset =  end_offset + 1;    
+			//end_offset = strSetDate.indexOf("\n",offset);  ip = strSetDate.substring(offset,end_offset); ether.parseIp(maskip ,(char*)ip.c_str()); offset = end_offset + 1;
+			//end_offset = strSetDate.indexOf("\n",offset);  ip = strSetDate.substring(offset,end_offset); ether.parseIp(gwip ,(char*)ip.c_str()); offset = end_offset + 1;     
+			//end_offset = strSetDate.indexOf("\n",offset);  ip = strSetDate.substring(offset,end_offset); ether.parseIp(dnsip ,(char*)ip.c_str());
 
-      end_offset1 = ip.indexOf(",",offset1); ip1 = ip.substring(offset1,end_offset1); 
-      myip[0] = (uint8_t)strtoul( ip1.c_str(), NULL, 10);
-      offset1 =  end_offset1 + 1;
+			/* IP */
+			end_offset = strSetDate.indexOf("\n",offset);  ip = strSetDate.substring(offset,end_offset); 
 
-      end_offset1 = ip.indexOf(",",offset1); ip1 = ip.substring(offset1,end_offset1); 
-      myip[1] = (uint8_t)strtoul( ip1.c_str(), NULL, 10);
-      offset1 =  end_offset1 + 1;
+			end_offset1 = ip.indexOf(",",offset1); ip1 = ip.substring(offset1,end_offset1); 
+			myip[0] = (uint8_t)strtoul( ip1.c_str(), NULL, 10);
+			offset1 =  end_offset1 + 1;
 
-      end_offset1 = ip.indexOf(",",offset1); ip1 = ip.substring(offset1,end_offset1); 
-      myip[2] = (uint8_t)strtoul( ip1.c_str(), NULL, 10);
-      offset1 =  end_offset1 + 1;     
+			end_offset1 = ip.indexOf(",",offset1); ip1 = ip.substring(offset1,end_offset1); 
+			myip[1] = (uint8_t)strtoul( ip1.c_str(), NULL, 10);
+			offset1 =  end_offset1 + 1;
 
-      end_offset1 = ip.indexOf(",",offset1); ip1 = ip.substring(offset1,end_offset1); 
-      myip[3] = (uint8_t)strtoul( ip1.c_str(), NULL, 10);   
+			end_offset1 = ip.indexOf(",",offset1); ip1 = ip.substring(offset1,end_offset1); 
+			myip[2] = (uint8_t)strtoul( ip1.c_str(), NULL, 10);
+			offset1 =  end_offset1 + 1;     
 
-      offset =  end_offset + 1;  
+			end_offset1 = ip.indexOf(",",offset1); ip1 = ip.substring(offset1,end_offset1); 
+			myip[3] = (uint8_t)strtoul( ip1.c_str(), NULL, 10);   
 
-      /* SUNNET */
-      offset1 = 0;
-      end_offset = SetDateStr.indexOf("\n",offset);  ip = SetDateStr.substring(offset,end_offset); 
-    //Serial.println(ip);   
-      end_offset1 = ip.indexOf(",",offset1); ip1 = ip.substring(offset1,end_offset1); 
-      maskip[0] = (uint8_t)strtoul( ip1.c_str(), NULL, 10);
-      offset1 =  end_offset1 + 1;
+			offset =  end_offset + 1;  
 
-      end_offset1 = ip.indexOf(",",offset1); ip1 = ip.substring(offset1,end_offset1); 
-      maskip[1] = (uint8_t)strtoul( ip1.c_str(), NULL, 10);
-      offset1 =  end_offset1 + 1;
+			/* SUNNET */
+			offset1 = 0;
+			end_offset = strSetDate.indexOf("\n",offset);  ip = strSetDate.substring(offset,end_offset); 
+			//Serial.println(ip);   
+			end_offset1 = ip.indexOf(",",offset1); ip1 = ip.substring(offset1,end_offset1); 
+			maskip[0] = (uint8_t)strtoul( ip1.c_str(), NULL, 10);
+			offset1 =  end_offset1 + 1;
 
-      end_offset1 = ip.indexOf(",",offset1); ip1 = ip.substring(offset1,end_offset1); 
-      maskip[2] = (uint8_t)strtoul( ip1.c_str(), NULL, 10);
-      offset1 =  end_offset1 + 1;     
+			end_offset1 = ip.indexOf(",",offset1); ip1 = ip.substring(offset1,end_offset1); 
+			maskip[1] = (uint8_t)strtoul( ip1.c_str(), NULL, 10);
+			offset1 =  end_offset1 + 1;
 
-      end_offset1 = ip.indexOf(",",offset1); ip1 = ip.substring(offset1,end_offset1); 
-      maskip[3] = (uint8_t)strtoul( ip1.c_str(), NULL, 10);   
+			end_offset1 = ip.indexOf(",",offset1); ip1 = ip.substring(offset1,end_offset1); 
+			maskip[2] = (uint8_t)strtoul( ip1.c_str(), NULL, 10);
+			offset1 =  end_offset1 + 1;     
 
-      offset =  end_offset + 1;  
-      
-      /* GW */
-      offset1 = 0;
-      end_offset = SetDateStr.indexOf("\n",offset);  ip = SetDateStr.substring(offset,end_offset); 
-    //Serial.println(ip);   
-      end_offset1 = ip.indexOf(",",offset1); ip1 = ip.substring(offset1,end_offset1); 
-      gwip[0] = (uint8_t)strtoul( ip1.c_str(), NULL, 10);
-      offset1 =  end_offset1 + 1;
+			end_offset1 = ip.indexOf(",",offset1); ip1 = ip.substring(offset1,end_offset1); 
+			maskip[3] = (uint8_t)strtoul( ip1.c_str(), NULL, 10);   
 
-      end_offset1 = ip.indexOf(",",offset1); ip1 = ip.substring(offset1,end_offset1); 
-      gwip[1] = (uint8_t)strtoul( ip1.c_str(), NULL, 10);
-      offset1 =  end_offset1 + 1;
+			offset =  end_offset + 1;  
 
-      end_offset1 = ip.indexOf(",",offset1); ip1 = ip.substring(offset1,end_offset1); 
-      gwip[2] = (uint8_t)strtoul( ip1.c_str(), NULL, 10);
-      offset1 =  end_offset1 + 1;     
+			/* GW */
+			offset1 = 0;
+			end_offset = strSetDate.indexOf("\n",offset);  ip = strSetDate.substring(offset,end_offset); 
+			//Serial.println(ip);   
+			end_offset1 = ip.indexOf(",",offset1); ip1 = ip.substring(offset1,end_offset1); 
+			gwip[0] = (uint8_t)strtoul( ip1.c_str(), NULL, 10);
+			offset1 =  end_offset1 + 1;
 
-      end_offset1 = ip.indexOf(",",offset1); ip1 = ip.substring(offset1,end_offset1); 
-      gwip[3] = (uint8_t)strtoul( ip1.c_str(), NULL, 10);   
+			end_offset1 = ip.indexOf(",",offset1); ip1 = ip.substring(offset1,end_offset1); 
+			gwip[1] = (uint8_t)strtoul( ip1.c_str(), NULL, 10);
+			offset1 =  end_offset1 + 1;
 
-      offset =  end_offset + 1;  
+			end_offset1 = ip.indexOf(",",offset1); ip1 = ip.substring(offset1,end_offset1); 
+			gwip[2] = (uint8_t)strtoul( ip1.c_str(), NULL, 10);
+			offset1 =  end_offset1 + 1;     
 
-      /* DNS */
-       offset1 = 0;
-      end_offset = SetDateStr.indexOf("\n",offset);  ip = SetDateStr.substring(offset,end_offset); 
-    //Serial.println(ip);   
-      end_offset1 = ip.indexOf(",",offset1); ip1 = ip.substring(offset1,end_offset1); 
-      dnsip[0] = (uint8_t)strtoul( ip1.c_str(), NULL, 10);
-      offset1 =  end_offset1 + 1;
+			end_offset1 = ip.indexOf(",",offset1); ip1 = ip.substring(offset1,end_offset1); 
+			gwip[3] = (uint8_t)strtoul( ip1.c_str(), NULL, 10);   
 
-      end_offset1 = ip.indexOf(",",offset1); ip1 = ip.substring(offset1,end_offset1); 
-      dnsip[1] = (uint8_t)strtoul( ip1.c_str(), NULL, 10);
-      offset1 =  end_offset1 + 1;
+			offset =  end_offset + 1;  
 
-      end_offset1 = ip.indexOf(",",offset1); ip1 = ip.substring(offset1,end_offset1); 
-      dnsip[2] = (uint8_t)strtoul( ip1.c_str(), NULL, 10);
-      offset1 =  end_offset1 + 1;     
+			/* DNS */
+			offset1 = 0;
+			end_offset = strSetDate.indexOf("\n",offset);  ip = strSetDate.substring(offset,end_offset); 
+			//Serial.println(ip);   
+			end_offset1 = ip.indexOf(",",offset1); ip1 = ip.substring(offset1,end_offset1); 
+			dnsip[0] = (uint8_t)strtoul( ip1.c_str(), NULL, 10);
+			offset1 =  end_offset1 + 1;
 
-      end_offset1 = ip.indexOf(",",offset1); ip1 = ip.substring(offset1,end_offset1); 
-      dnsip[3] = (uint8_t)strtoul( ip1.c_str(), NULL, 10);   
+			end_offset1 = ip.indexOf(",",offset1); ip1 = ip.substring(offset1,end_offset1); 
+			dnsip[1] = (uint8_t)strtoul( ip1.c_str(), NULL, 10);
+			offset1 =  end_offset1 + 1;
 
-      offset =  end_offset + 1;  
-                  
-   	} 
+			end_offset1 = ip.indexOf(",",offset1); ip1 = ip.substring(offset1,end_offset1); 
+			dnsip[2] = (uint8_t)strtoul( ip1.c_str(), NULL, 10);
+			offset1 =  end_offset1 + 1;     
 
+			end_offset1 = ip.indexOf(",",offset1); ip1 = ip.substring(offset1,end_offset1); 
+			dnsip[3] = (uint8_t)strtoul( ip1.c_str(), NULL, 10);   
+
+			offset =  end_offset + 1;  
+		          
+		} 
     
 	}
 
-  SetDateStr = ""; 
-	if (SD.exists(SetPath))  
+	strSetDate = ""; 
+	if (SD.exists(strSetPath))  
 	{
-		myFile = SD.open(SetPath);
+		myFile = SD.open(strSetPath);
 		if (myFile) 
 		{
 			while (myFile.available()) 
 			{
-				SetDateStr += (char)(myFile.read());
+				strSetDate += (char)(myFile.read());
 			}
-			//SetDateStr += "\0";
+			//strSetDate += "\0";
 			myFile.close();
 
-			//Serial.println(SetDateStr);   
+			//Serial.println(strSetDate);   
 
 			uint16_t from = 0;      uint16_t to;      String s0 = "";
-			to = SetDateStr.indexOf("\n",from);  s0 = SetDateStr.substring(from,to); from =  to + 1; //Serial.println(s0);   
+			to = strSetDate.indexOf("\n",from);  s0 = strSetDate.substring(from,to); from =  to + 1; //Serial.println(s0);   
 
 			uint16_t idx = 0;      uint16_t edx;      String s1="";
 			edx = s0.indexOf("/",idx);     s1 = s0.substring(idx , edx + 1);         s1.toCharArray(website,edx + 1); idx =  edx; //Serial.print(website);   
 			edx = s0.indexOf("\n",idx);  s1 = s0.substring(idx, edx + 1);   s1.toCharArray(suburl,edx + 1);   //Serial.println(suburl);   
 
-			to = SetDateStr.indexOf("\n",from);  s0 = SetDateStr.substring(from,to); s0.toCharArray(device_name,to);  from =  to + 1;    //Serial.println(device_name);   
-			to = SetDateStr.indexOf("\n",from);  s0 = SetDateStr.substring(from,to); s0.toCharArray(device_serial,to);  from = to + 1;   //Serial.println(device_serial);  
-			to = SetDateStr.indexOf("\n",from);  s0 = SetDateStr.substring(from,to); RelayONTime = (uint16_t)(strtoul( s0.c_str(), NULL, 10));  from = to + 1;  //Serial.println(RelayONTime);  
-			//to = SetDateStr.indexOf("\0",from-5);
-			s0 = SetDateStr.substring(from,from + 2); FireVoltage = (uint16_t)strtoul( s0.c_str(), NULL, 10);  //Serial.println(FireVoltage);  
+			to = strSetDate.indexOf("\n",from);  s0 = strSetDate.substring(from,to); s0.toCharArray(arrDeviceName,to);  from =  to + 1;    //Serial.println(arrDeviceName);   
+			to = strSetDate.indexOf("\n",from);  s0 = strSetDate.substring(from,to); s0.toCharArray(arrDeviceSerial,to);  from = to + 1;   //Serial.println(arrDeviceSerial);  
+			to = strSetDate.indexOf("\n",from);  s0 = strSetDate.substring(from,to); RelayONTime = (uint16_t)(strtoul( s0.c_str(), NULL, 10));  from = to + 1;  //Serial.println(RelayONTime);  
+			//to = strSetDate.indexOf("\0",from-5);
+			s0 = strSetDate.substring(from,from + 2); FireVoltage = (uint16_t)strtoul( s0.c_str(), NULL, 10);  //Serial.println(FireVoltage);  
 
 		} 
 	}
  
 }
 
-String LogFolder = "LOG";
-void vSDCardLogDate(uint8_t * uid ) 
+
+
+void vSDCardLogData(uint8_t * uid ) 
 {
-  char logFilename[128]; 
-  char logData[128]; 
-  char StringChar[20]; 
+	if(LogAckFlag == true)
+	{
+		char arr_logdata[128]; 
+		char arr_loguid[20]; 
+		char arr_logfilename[128]; 
 
-   rtclock.breakTime(rtclock.now(), mtt);
-   sprintf(logFilename, "log_%u%u%u",mtt.year+1970, mtt.month, mtt.day, mtt.hour);
-   sprintf(logData, "%s %u %u, %s, %02u:%02u:%02u : ", months[mtt.month], mtt.day, mtt.year+1970, weekdays[mtt.weekday], mtt.hour, mtt.minute, mtt.second);
-   sprintf(StringChar,"%02X%02X%02X%02X", uid[0],uid[1],uid[2],uid[3]);
-   //Serial.print(logPath);
+		//rtclock.breakTime(rtclock.now(), TimeStamp);
+		sprintf(arr_logfilename, "log_%u%u%u",logTimeStamp.year+1970, logTimeStamp.month, logTimeStamp.day, logTimeStamp.hour);
+		sprintf(arr_logdata, "%s %u %u, %s, %02u:%02u:%02u : ", months[logTimeStamp.month], logTimeStamp.day, logTimeStamp.year+1970,
+			                                                  weekdays[logTimeStamp.weekday], logTimeStamp.hour, logTimeStamp.minute, logTimeStamp.second);
+		sprintf(arr_loguid, "%02X%02X%02X%02X", uid[0],uid[1],uid[2],uid[3]);
 
-  vSDCardFolder("LogFolder");
+		String str_logFolder = "LOG";
+		String str_logFile = arr_logfilename;
+		String str_logData = arr_logdata;
+			   str_logData += arr_loguid;
 
-  String logFile = logFilename;
-  File myFile;
-  myFile = SD.open(LogFolder +"/"+logFile, FILE_WRITE);
-  myFile.seek(myFile.size());
-  myFile.print(logData);
-  myFile.print(StringChar);
-  myFile.close();
+		vSDCardFolder(str_logFolder);
+
+		File myFile;
+		myFile = SD.open(str_logFolder +"/"+str_logFile, FILE_WRITE);
+		myFile.seek(myFile.size());
+		myFile.print(str_logData.c_str());
+		myFile.close();
+
+		LogAckFlag = false;
+	}
+
 }
 
 
@@ -316,34 +334,33 @@ void vSDCardLogRead(String logPath )
 {
   File myFile;
  
-//   rtclock.breakTime(rtclock.now(), mtt);
-//   sprintf(logPath, "log_%u%u%u",mtt.year+1970, mtt.month, mtt.day, mtt.hour);
+//   rtclock.breakTime(rtclock.now(), TimeStamp);
+//   sprintf(logPath, "log_%u%u%u",TimeStamp.year+1970, TimeStamp.month, TimeStamp.day, TimeStamp.hour);
 
-  if (SD.exists(logPath))  
-  {
-    myFile = SD.open(logPath);
-    LogDateStr = "";
-    if (myFile) 
-    {
-      // read from the file until there's nothing else in it:
-      while (myFile.available()) 
-      {
-        LogDateStr += (char)(myFile.read());
-      }
-      myFile.close();
-    } 
-  }
+	if (SD.exists(logPath))  
+	{
+		myFile = SD.open(logPath);
+		strLogDate = "";
+		if (myFile) 
+		{
+			// read from the file until there's nothing else in it:
+			while (myFile.available()) 
+			{
+				strLogDate += (char)(myFile.read());
+			}
+			myFile.close();
+		} 
+	}
   
 }
 
-String SyncPath = "SYNCDATE";
 void vSDCardSyncDate( String sDate ) 
 {
-	if (SD.exists(SyncPath))
-		SD.remove(SyncPath);
+	if (SD.exists(strSyncPath))
+		SD.remove(strSyncPath);
 	
 	File myFile;
-	myFile = SD.open(SyncPath, FILE_WRITE);
+	myFile = SD.open(strSyncPath, FILE_WRITE);
 	myFile.print(sDate);
 	myFile.close();
 }
@@ -351,20 +368,20 @@ void vSDCardSyncDate( String sDate )
 void vSDCardSyncDateLoad( ) 
 {
 	File myFile;
-	int StringDec;
-	char StringChar;
+	//int StringDec;
+	//char arrUIDchar;
 
-	SyncDateStr = "0";
-	if (SD.exists(SyncPath))	
+	strSyncDate = "0";
+	if (SD.exists(strSyncPath))	
 	{
-		myFile = SD.open(SyncPath);
-		SyncDateStr = "";
+		myFile = SD.open(strSyncPath);
+		strSyncDate = "";
 		if (myFile) 
 		{
 			// read from the file until there's nothing else in it:
 			while (myFile.available()) 
 			{
-       SyncDateStr += (char)(myFile.read());
+      			strSyncDate += (char)(myFile.read());
 			}
 
 			myFile.close();
@@ -373,19 +390,19 @@ void vSDCardSyncDateLoad( )
   
 }
 
-String authUid = "0";
-void vSDCardUidDateLoad(uint8_t * uid ) 
+
+void vSDCardUidDataLoad(uint8_t * uid ) 
 {
 	File myFile;
-	char StringChar[20]; 
-	sprintf(StringChar,"%02X%02X%02X%02X", uid[0],uid[1],uid[2],uid[3]);
+	char arrUIDchar[20]; 
+	sprintf(arrUIDchar,"%02X%02X%02X%02X", uid[0],uid[1],uid[2],uid[3]);
 
 	int StrDec;
 	char StrChar;
 
-	String folder01 = String(StringChar).substring(0, 2);
-	String folder02 = String(StringChar).substring(2, 5);
-	String folderFile = String(StringChar).substring(2, 8);
+	String folder01 = String(arrUIDchar).substring(0, 2);
+	String folder02 = String(arrUIDchar).substring(2, 5);
+	String folderFile = String(arrUIDchar).substring(2, 8);
 	//String FileState = String(sa);     
 
 	// vSDCardFolder(folder01 + "/" + folder02);
@@ -395,11 +412,11 @@ void vSDCardUidDateLoad(uint8_t * uid )
     
 	//Serial.println((const char*)pathStr.c_str());       
 
-setEvent(&ActiveEvent , RFID_DONE);
+	setEvent(&ActiveEvent , RFID_DONE);
 
 	if (SD.exists(pathStr))
 	{
-		authUid = "";
+		strAuthUid = "";
 		myFile = SD.open(pathStr);
 
 		if (myFile) 
@@ -407,27 +424,27 @@ setEvent(&ActiveEvent , RFID_DONE);
 		// read from the file until there's nothing else in it:
 			while (myFile.available()) 
 			{
-				authUid += (char)(myFile.read());
+				strAuthUid += (char)(myFile.read());
 			}
 			myFile.close();
 		}
-		Serial.println((const char*)authUid.c_str());     
+		Serial.println((const char*)strAuthUid.c_str());     
 
     //setEvent(&ActiveEvent , RFID_DONE);
 	}
 	else
 	{
-     #ifdef DEBUG_SDCARD
+    #ifdef DEBUG_SDCARD
 		//Serial.println("permission denied...");   
     #endif
     #if 0
-		 vSDCardFolder(folder01 + "/" + folder02);
-		 vSDCardFile(folder01 + "/" + folder02 + "/" + folderFile , "y");   
+		vSDCardFolder(folder01 + "/" + folder02);
+		vSDCardFile(folder01 + "/" + folder02 + "/" + folderFile , "y");   
 
-		  File myFile;
-		   myFile = SD.open(folder01 + "/" + folder02 + "/" + folderFile, FILE_WRITE);
-		   myFile.print("y");
-		   myFile.close();  
+		File myFile;
+		myFile = SD.open(folder01 + "/" + folder02 + "/" + folderFile, FILE_WRITE);
+		myFile.print("y");
+		myFile.close();  
     #endif
 	}
 }

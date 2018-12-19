@@ -5,8 +5,17 @@
 #include <EtherCard_STM.h>
 
 
+enum etherState
+{
+    SyncIdle, SyncInit, SyncData
+};
+etherState EtherStep = SyncIdle;
 
-static uint32_t ethernet_timer;
+uint8_t LogAckFlag = false;
+
+static uint32_t EthernetTimer;
+uint32_t LogTimeOut;
+
 
 static uint8_t static_IP = 0; 
 //static char website[]  = "body.ibuild.kr";
@@ -61,8 +70,8 @@ void vEnc28j60spi1Task_setup(void)
 
 	ether.printIp("SRV: ", ether.hisip);
 
-	etherStep = SyncInit;
-	ethernet_timer = millis();
+	EtherStep = SyncInit;
+	EthernetTimer = millis();
 }
 
 uint16_t loopCnt;
@@ -74,12 +83,12 @@ void vEnc28j60spi1Task(void)
 {
 	ether.packetLoop(ether.packetReceive());
 
-	if (millis() > ethernet_timer) 
+	if (millis() > EthernetTimer) 
 	{
-		if(etherStep == SyncInit)
+		if(EtherStep == SyncInit)
 		{ 
 			vSDCardSyncDateLoad( ) ;
-			const char *cstr = SyncDateStr.c_str();
+			const char *cstr = strSyncDate.c_str();
 			sprintf(paramStr,"?SyncType=1&SyncDate=%s", cstr);
        		#ifdef DEBUG_ENC28J60
 			//Serial.println((const char*)paramStr); 
@@ -90,27 +99,27 @@ void vEnc28j60spi1Task(void)
       
 			sNo = 0;
 			sCnt = sCntMax;
-			etherStep = SyncData;
-			ethernet_timer = millis() + 30000;
+			EtherStep = SyncData;
+			EthernetTimer = millis() + 30000;
 		}
-		else if(etherStep == SyncData)
+		else if(EtherStep == SyncData)
 		{
-			const char *cstr = SyncDateStr.c_str();   
+			const char *cstr = strSyncDate.c_str();   
 			sprintf(paramStr, "?sNo=%d&sCount=%d&SyncDate=%s",sNo,sCnt, cstr); 
       		#ifdef DEBUG_ENC28J60
 			//Serial.println((const char*)paramStr);  
       		Serial.print(website);Serial.print(suburl);Serial.println(paramStr);
       		#endif
       		ether.browseUrl((const char*)suburl,(const char*)paramStr, (const char*)website, SyncData_callback);
-      		//ether.browseUrl(PSTR("/door_control/sync.php"),(const char*)paramStr, website, SyncData_callback);
-			ethernet_timer = millis() + 2000; 
+ 			EthernetTimer = millis() + 2000; 
 		}
 		else //idle
 		{
-			etherStep = SyncInit;
-			ethernet_timer = millis() + 300000;
+			EtherStep = SyncInit;
+			EthernetTimer = millis() + 300000;
 
 		}
+
 	}
   
 } 
@@ -124,26 +133,28 @@ static void SyncInit_callback (byte status, uint16_t off, uint16_t len)
 	
 	char *ptr = strstr((const char*) Ethernet::buffer + off, "[[S]]");  
 #ifdef DEBUG_ENC28J60
-	Serial.print((const char*)ptr);Serial.println("");
+	Serial.print((const char*)Ethernet::buffer + off);Serial.println("");
 #endif
 	char *ptrtok = strtok(ptr+5, "[]");
 	sDateNum = (uint16_t)strtoul( ptrtok, NULL, 10);
-   #ifdef DEBUG_ENC28J60
+#ifdef DEBUG_ENC28J60
 	Serial.print("sDateNum : ");
 	Serial.println(sDateNum);
-  #endif
+#endif
 
 	ptrtok = strtok(NULL, "[]");
-	SyncDateStrNew = (const char*)ptrtok;
-  #ifdef DEBUG_ENC28J60
-	Serial.print("SyncDateStr : ");
-	Serial.print(SyncDateStrNew);
+	strSyncDateNew = (const char*)ptrtok;
+#ifdef DEBUG_ENC28J60
+	Serial.print("strSyncDate : ");
+	Serial.print(strSyncDateNew);
 	Serial.println("");
-  #endif
+#endif
 
-  RtcTimeSet(SyncDateStrNew);  
+  RtcTimeSet(strSyncDateNew);  
+  if(sDateNum == 0)
+    EtherStep = SyncIdle;
   
-	ethernet_timer = millis() + 100;
+	EthernetTimer = millis() + 100;
 }
 
 typedef struct _UID {   // 구조체 이름은 _Person
@@ -155,15 +166,15 @@ UID uIDArry[sCntMax];
 static void SyncData_callback (byte status, uint16_t off, uint16_t len)
 {
 	Ethernet::buffer[off+len] = 0;
-  #ifdef DEBUG_ENC28J60
-  //Serial.print("SyncData_callback");
-  //Serial.print((const char*)Ethernet::buffer + off);
-  //char tmpStr[50]; 
-  //sprintf(tmpStr,"off=%d  len=%d sNo=%d & sCount=%d & sDateNum=%d",off,len ,sNo,sCnt,sDateNum); 
-  //Serial.println(tmpStr);
-  #endif
-  
-	#if 0 //Content-Length filter
+#ifdef DEBUG_ENC28J60
+	//Serial.print("SyncData_callback");
+	//Serial.print((const char*)Ethernet::buffer + off);
+	//char tmpStr[50]; 
+	//sprintf(tmpStr,"off=%d  len=%d sNo=%d & sCount=%d & sDateNum=%d",off,len ,sNo,sCnt,sDateNum); 
+	//Serial.println(tmpStr);
+#endif
+
+#if 0 //Content-Length filter
 	char *ptr = strstr((const char*)Ethernet::buffer + off, "Content-Length:"); 
 	if(ptr == NULL)
 	{
@@ -172,10 +183,10 @@ static void SyncData_callback (byte status, uint16_t off, uint16_t len)
 		sprintf(paramStr,"?sNo=%d&sCount=%d&SyncDate=0",sNo,sCnt); 
 		//Serial.println(paramStr);
 		//ether.browseUrl(PSTR("/door_control/sync.php"),(const char*)paramStr, website, SyncData_callback);
-    ether.browseUrl((const char*)suburl, (const char*)paramStr , (const char*)website, SyncInit_callback);
+		ether.browseUrl((const char*)suburl, (const char*)paramStr , (const char*)website, SyncInit_callback);
 	}
 	else
-	#endif
+#endif
 	{
 	   // Serial.print((const char*)Ethernet::buffer + off);Serial.println("");
 		  
@@ -230,12 +241,12 @@ static void SyncData_callback (byte status, uint16_t off, uint16_t len)
 				vSDCardFolder(folder01 + "/" + folder02);
 				vSDCardFile(folder01 + "/" + folder02 + "/" + folderFile , FileState);                   
         
-        vPN532Serial3Task();
+       			vPN532Serial3Task();
         
 			}
       #ifdef DEBUG_ENC28J60
 			Serial.println("");
-		  #endif
+	  #endif
 		  
 			sNo = sNo + sCnt;
 			if((sDateNum - sNo) < sCnt)
@@ -246,17 +257,63 @@ static void SyncData_callback (byte status, uint16_t off, uint16_t len)
 				sNo = 0;
 				sCnt = 0;
 				sDateNum = 0;
-				etherStep = SyncIdle;
+				EtherStep = SyncIdle;
 				Serial.println("SyncData finished");
-				vSDCardSyncDate( SyncDateStrNew );       
+				vSDCardSyncDate( strSyncDateNew );       
 			}
 
 		}
 		#endif
 	}
 	
-	ethernet_timer = millis() + 100;
+	EthernetTimer = millis() + 100;
 
 }
 
+
+void etherLogData(uint8_t * uid ) 
+{
+	char arr_logdata[128]; 
+	char arr_loguid[20]; 
+	char arr_logfilename[128]; 
+
+	rtclock.breakTime(rtclock.now(), logTimeStamp);
+
+	sprintf(arr_logdata, "%s %u %u, %s, %02u:%02u:%02u : ", months[logTimeStamp.month], logTimeStamp.day, logTimeStamp.year+1970, weekdays[logTimeStamp.weekday], logTimeStamp.hour, logTimeStamp.minute, logTimeStamp.second);
+	sprintf(arr_loguid, "%02X%02X%02X%02X", uid[0],uid[1],uid[2],uid[3]);
+
+	String str_logData = arr_logdata;
+			 str_logData = arr_loguid;
+
+	const char *cstr = str_logData.c_str();
+	sprintf(paramStr,"?%s", cstr);
+	ether.browseUrl((const char*)suburl, (const char*)paramStr , (const char*)website, log_callback);
+
+	LogAckFlag = true;
+
+	LogTimeOut = millis() + 500;
+
+}
+
+
+static void log_callback (byte status, uint16_t off, uint16_t len)
+{
+	Ethernet::buffer[off+len] = 0;
+
+	//Serial.print("log_callback");
+
+	char *ptr = strstr((const char*) Ethernet::buffer + off, "[[S]]");  
+#ifdef DEBUG_ENC28J60
+	Serial.print((const char*)ptr);Serial.println("");
+#endif
+	char *ptrtok = strtok(ptr+5, "[]");
+	strSyncDateNew = (const char*)ptrtok;
+#ifdef DEBUG_ENC28J60
+	Serial.print("log ack : ");
+	Serial.print(strSyncDateNew);
+	Serial.println("");
+#endif
+
+	LogAckFlag = false;
+}
 #endif  
