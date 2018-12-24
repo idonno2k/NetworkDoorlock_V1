@@ -271,7 +271,7 @@ static void SyncData_callback (byte status, uint16_t off, uint16_t len)
 }
 
 
-String strLogDate; 
+//String strLogDate; 
 String strLogUID; 
 void etherLogData(uint8_t * uid ) 
 {

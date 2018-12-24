@@ -3,6 +3,8 @@
 #define PN532_ENABLE
 #define SDCARD_ENABLE
 
+#include <SPI.h>
+#include <SD.h>
 #include <RTClock.h>
 
 RTClock rtclock (RTCSEL_LSE); // initialise

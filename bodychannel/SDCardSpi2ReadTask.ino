@@ -16,8 +16,8 @@ String strMacPath = "MAC";
 String strSetDate = "20181219000000"; 
 String strLogDate = ""; 
 
-String strSyncDate = "0"; 
-String strSyncDateNew = "0"; 
+String strSyncDate = ""; 
+String strSyncDateNew = ""; 
 
 static char arrDeviceName[]  = "67CU65SU7LGE64SQIOuNsOuqqA==";
 static char arrDeviceSerial[] = "2000";
@@ -127,7 +127,9 @@ void vSDCardSetParmLoad( )
 		{
 			while (myFile.available()) 
 			{
-				strSetDate += (char)(myFile.read());
+				char tmpchar = (char)(myFile.read());
+				if(tmpchar != '\r')
+					strSetDate += tmpchar;
 			}
 			//strSetDate += "\0";
 			myFile.close();
@@ -151,7 +153,9 @@ void vSDCardSetParmLoad( )
 		{
 			while (myFile.available()) 
 			{
-				strSetDate += (char)(myFile.read());
+				char tmpchar = (char)(myFile.read());
+				if(tmpchar != '\r')
+					strSetDate += tmpchar;
 			}
 			//strSetDate += "\0";
 			myFile.close();
@@ -175,6 +179,7 @@ void vSDCardSetParmLoad( )
 			//end_offset = strSetDate.indexOf("\n",offset);  ip = strSetDate.substring(offset,end_offset); ether.parseIp(gwip ,(char*)ip.c_str()); offset = end_offset + 1;     
 			//end_offset = strSetDate.indexOf("\n",offset);  ip = strSetDate.substring(offset,end_offset); ether.parseIp(dnsip ,(char*)ip.c_str());
 
+#if 0
 			/* IP */
 			end_offset = strSetDate.indexOf("\n",offset);  ip = strSetDate.substring(offset,end_offset); 
 
@@ -257,7 +262,7 @@ void vSDCardSetParmLoad( )
 			dnsip[3] = (uint8_t)strtoul( ip1.c_str(), NULL, 10);   
 
 			offset =  end_offset + 1;  
-		          
+#endif		          
 		} 
     
 	}
@@ -270,7 +275,9 @@ void vSDCardSetParmLoad( )
 		{
 			while (myFile.available()) 
 			{
-				strSetDate += (char)(myFile.read());
+				char tmpchar = (char)(myFile.read());
+				if(tmpchar != '\r')
+					strSetDate += tmpchar;
 			}
 			//strSetDate += "\0";
 			myFile.close();
@@ -346,7 +353,9 @@ void vSDCardLogRead(String logPath )
 			// read from the file until there's nothing else in it:
 			while (myFile.available()) 
 			{
-				strLogDate += (char)(myFile.read());
+				char tmpchar = (char)(myFile.read());
+				if(tmpchar != '\r')
+					strLogDate += tmpchar;
 			}
 			myFile.close();
 		} 
@@ -371,7 +380,7 @@ void vSDCardSyncDateLoad( )
 	//int StringDec;
 	//char arrUIDchar;
 
-	strSyncDate = "0";
+	strSyncDate = "";
 	if (SD.exists(strSyncPath))	
 	{
 		myFile = SD.open(strSyncPath);
@@ -381,7 +390,9 @@ void vSDCardSyncDateLoad( )
 			// read from the file until there's nothing else in it:
 			while (myFile.available()) 
 			{
-      			strSyncDate += (char)(myFile.read());
+				char tmpchar = (char)(myFile.read());
+				if(tmpchar != '\r')
+					strSyncDate += tmpchar;
 			}
 
 			myFile.close();
@@ -424,7 +435,9 @@ void vSDCardUidDataLoad(uint8_t * uid )
 		// read from the file until there's nothing else in it:
 			while (myFile.available()) 
 			{
-				strAuthUid += (char)(myFile.read());
+				char tmpchar = (char)(myFile.read());
+				if(tmpchar != '\r')
+					strAuthUid += tmpchar;
 			}
 			myFile.close();
 		}

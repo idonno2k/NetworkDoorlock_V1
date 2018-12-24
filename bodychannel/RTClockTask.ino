@@ -1,6 +1,6 @@
 #define DEBUG_RTC
 
-//#include <RTClock.h>
+#include <RTClock.h>
 
 //RTClock rtclock (RTCSEL_LSE); // initialise
 //uint32_t curTimeTag; 
