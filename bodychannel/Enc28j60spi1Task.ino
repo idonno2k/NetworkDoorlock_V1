@@ -271,6 +271,8 @@ static void SyncData_callback (byte status, uint16_t off, uint16_t len)
 }
 
 
+String strLogDate; 
+String strLogUID; 
 void etherLogData(uint8_t * uid ) 
 {
 	char arr_logdata[128]; 
@@ -279,11 +281,14 @@ void etherLogData(uint8_t * uid )
 
 	rtclock.breakTime(rtclock.now(), logTimeStamp);
 
-	sprintf(arr_logdata, "%s %u %u, %s, %02u:%02u:%02u : ", months[logTimeStamp.month], logTimeStamp.day, logTimeStamp.year+1970, weekdays[logTimeStamp.weekday], logTimeStamp.hour, logTimeStamp.minute, logTimeStamp.second);
+	//sprintf(arr_logdata, "%s %u %u, %s, %02u:%02u:%02u : ", months[logTimeStamp.month], logTimeStamp.day, logTimeStamp.year+1970, weekdays[logTimeStamp.weekday], logTimeStamp.hour, logTimeStamp.minute, logTimeStamp.second);
+	sprintf(arr_logdata, "%u%u%u%02u%02u%02u",  logTimeStamp.year+1970, logTimeStamp.month, logTimeStamp.day,logTimeStamp.hour, logTimeStamp.minute, logTimeStamp.second);
 	sprintf(arr_loguid, "%02X%02X%02X%02X", uid[0],uid[1],uid[2],uid[3]);
 
-	String str_logData = arr_logdata;
-			 str_logData = arr_loguid;
+	strLogDate = arr_logdata;
+	strLogUID = arr_loguid;
+
+	String str_logData = strLogDate + "-" + strLogUID;
 
 	const char *cstr = str_logData.c_str();
 	sprintf(paramStr,"?%s", cstr);
@@ -307,10 +312,10 @@ static void log_callback (byte status, uint16_t off, uint16_t len)
 	Serial.print((const char*)ptr);Serial.println("");
 #endif
 	char *ptrtok = strtok(ptr+5, "[]");
-	strSyncDateNew = (const char*)ptrtok;
+	String str_log = (const char*)ptrtok;
 #ifdef DEBUG_ENC28J60
 	Serial.print("log ack : ");
-	Serial.print(strSyncDateNew);
+	Serial.print(str_log);
 	Serial.println("");
 #endif
 

@@ -125,28 +125,58 @@ void vRTCTask()
 
     if(TimeStamp.minute == 0)
     {
-	   sprintf(currLogPath, "log_%u%u%u%02u",TimeStamp.year+1970, TimeStamp.month, TimeStamp.day, TimeStamp.hour);
-	   
-	   Serial.print(currLogPath);
-	
-       vSDCardLogRead(strLastLogPath )  ;
 
-        byte sd = stash.create();
-        stash.println(strLogDate.c_str() );
-        stash.save();
+	    File log_dir = SD.open("/LOG/");
 
-        Stash::prepare(PSTR("POST http://$F/$F" "\r\n"
-            "Host: $F" "\r\n"
-            "Content-Length: $D" "\r\n"
-            "Content-Type: application/x-www-form-urlencoded" "\r\n"
-            "\r\n"/*이것때문에 안된거였음 헐~~*/
-            "$H"),
-            website,suburl,stash.size(),sd);
+		while(true)
+		{
 
-        ether.tcpSend();
+			File entry =  log_dir.openNextFile();
+			if (! entry) 
+			{
+			  // no more files
+			  break;
+			}
+
+			//Serial.print(entry.name());
+			String str_entry_name = entry.name();
+			if (!entry.isDirectory()) 
+			{
+				File myFile = SD.open(str_entry_name);
+				strLogDate = str_entry_name + "-";
+				if (myFile) 
+				{
+					// read from the file until there's nothing else in it:
+					while (myFile.available()) 
+					{
+					  strLogDate += (char)(myFile.read());
+					}
+					myFile.close();
+
+					byte sd = stash.create();
+					stash.println(strLogDate.c_str() );
+					stash.save();
+					
+					Stash::prepare(PSTR("POST http://$F/$F" "\r\n"
+						"Host: $F" "\r\n"
+						"Content-Length: $D" "\r\n"
+						"Content-Type: application/x-www-form-urlencoded" "\r\n"
+						"\r\n"/*이것때문에 안된거였음 헐~~*/
+						"$H"),
+						website,suburl,stash.size(),sd);
+					
+					ether.tcpSend();
+
+					
+				} 
+
+			}
+			entry.close();
+		}
+
      
      }
-     strLastLogPath = "";
-     strLastLogPath = currLogPath;
+    // strLastLogPath = "";
+    // strLastLogPath = currLogPath;
   }
 }

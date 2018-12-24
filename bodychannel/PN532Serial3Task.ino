@@ -92,7 +92,7 @@ void vPN532Serial3Task(void)
 
 	if (millis() > LogTimeOut) 
 	{
-		vSDCardLogData(uid) ;
+		vSDCardLogData() ;
 	}
 
 

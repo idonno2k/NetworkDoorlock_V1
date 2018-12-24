@@ -297,24 +297,24 @@ void vSDCardSetParmLoad( )
 
 
 
-void vSDCardLogData(uint8_t * uid ) 
+
+void vSDCardLogData( ) 
 {
 	if(LogAckFlag == true)
 	{
-		char arr_logdata[128]; 
-		char arr_loguid[20]; 
-		char arr_logfilename[128]; 
+		//char arr_logdata[128]; 
+		//char arr_loguid[20]; 
+		//char arr_logfilename[128]; 
 
 		//rtclock.breakTime(rtclock.now(), TimeStamp);
-		sprintf(arr_logfilename, "log_%u%u%u",logTimeStamp.year+1970, logTimeStamp.month, logTimeStamp.day, logTimeStamp.hour);
-		sprintf(arr_logdata, "%s %u %u, %s, %02u:%02u:%02u : ", months[logTimeStamp.month], logTimeStamp.day, logTimeStamp.year+1970,
-			                                                  weekdays[logTimeStamp.weekday], logTimeStamp.hour, logTimeStamp.minute, logTimeStamp.second);
-		sprintf(arr_loguid, "%02X%02X%02X%02X", uid[0],uid[1],uid[2],uid[3]);
+		//sprintf(arr_logfilename, "log_%u%u%u",logTimeStamp.year+1970, logTimeStamp.month, logTimeStamp.day, logTimeStamp.hour);
+		//sprintf(arr_logdata, "%s %u %u, %s, %02u:%02u:%02u : ", months[logTimeStamp.month], logTimeStamp.day, logTimeStamp.year+1970,
+		//	                                                  weekdays[logTimeStamp.weekday], logTimeStamp.hour, logTimeStamp.minute, logTimeStamp.second);
+		//sprintf(arr_loguid, "%02X%02X%02X%02X", uid[0],uid[1],uid[2],uid[3]);
 
 		String str_logFolder = "LOG";
-		String str_logFile = arr_logfilename;
-		String str_logData = arr_logdata;
-			   str_logData += arr_loguid;
+		String str_logFile = strLogDate;
+		String str_logData = strLogUID;
 
 		vSDCardFolder(str_logFolder);
 
