@@ -19,8 +19,6 @@ String strLogDate = "";
 String strSyncDate = ""; 
 String strSyncDateNew = ""; 
 
-static char arrDeviceName[]  = "67CU65SU7LGE64SQIOuNsOuqqA==";
-static char arrDeviceSerial[] = "2000";
 
 //byte tmpBuf[512];
 void vSDCardSpi2ReadTask_setup(void) 
@@ -174,94 +172,43 @@ void vSDCardSetParmLoad( )
 			uint16_t offset1 = 0;        uint16_t end_offset1;   String ip1 ;   
 			//Serial.println(strSetDate);   
 
-			//end_offset = strSetDate.indexOf("\n",offset);  ip = strSetDate.substring(offset,end_offset); ether.parseIp(myip ,(char*)ip.c_str()); offset =  end_offset + 1;    
-			//end_offset = strSetDate.indexOf("\n",offset);  ip = strSetDate.substring(offset,end_offset); ether.parseIp(maskip ,(char*)ip.c_str()); offset = end_offset + 1;
-			//end_offset = strSetDate.indexOf("\n",offset);  ip = strSetDate.substring(offset,end_offset); ether.parseIp(gwip ,(char*)ip.c_str()); offset = end_offset + 1;     
-			//end_offset = strSetDate.indexOf("\n",offset);  ip = strSetDate.substring(offset,end_offset); ether.parseIp(dnsip ,(char*)ip.c_str());
+			end_offset = strSetDate.indexOf("\n",offset);  ip = strSetDate.substring(offset,end_offset); ether.parseIp(myip ,(char*)ip.c_str()); offset =  end_offset + 1;    
+			end_offset = strSetDate.indexOf("\n",offset);  ip = strSetDate.substring(offset,end_offset); ether.parseIp(maskip ,(char*)ip.c_str()); offset = end_offset + 1;
+			end_offset = strSetDate.indexOf("\n",offset);  ip = strSetDate.substring(offset,end_offset); ether.parseIp(gwip ,(char*)ip.c_str()); offset = end_offset + 1;     
+			end_offset = strSetDate.indexOf("\n",offset);  ip = strSetDate.substring(offset,end_offset); ether.parseIp(dnsip ,(char*)ip.c_str());
 
 #if 0
 			/* IP */
 			end_offset = strSetDate.indexOf("\n",offset);  ip = strSetDate.substring(offset,end_offset); 
 
-			end_offset1 = ip.indexOf(",",offset1); ip1 = ip.substring(offset1,end_offset1); 
-			myip[0] = (uint8_t)strtoul( ip1.c_str(), NULL, 10);
-			offset1 =  end_offset1 + 1;
-
-			end_offset1 = ip.indexOf(",",offset1); ip1 = ip.substring(offset1,end_offset1); 
-			myip[1] = (uint8_t)strtoul( ip1.c_str(), NULL, 10);
-			offset1 =  end_offset1 + 1;
-
-			end_offset1 = ip.indexOf(",",offset1); ip1 = ip.substring(offset1,end_offset1); 
-			myip[2] = (uint8_t)strtoul( ip1.c_str(), NULL, 10);
-			offset1 =  end_offset1 + 1;     
-
-			end_offset1 = ip.indexOf(",",offset1); ip1 = ip.substring(offset1,end_offset1); 
-			myip[3] = (uint8_t)strtoul( ip1.c_str(), NULL, 10);   
-
-			offset =  end_offset + 1;  
+			end_offset1 = ip.indexOf(",",offset1); ip1 = ip.substring(offset1,end_offset1); 			myip[0] = (uint8_t)strtoul( ip1.c_str(), NULL, 10);			offset1 =  end_offset1 + 1;
+			end_offset1 = ip.indexOf(",",offset1); ip1 = ip.substring(offset1,end_offset1); 			myip[1] = (uint8_t)strtoul( ip1.c_str(), NULL, 10);			offset1 =  end_offset1 + 1;
+			end_offset1 = ip.indexOf(",",offset1); ip1 = ip.substring(offset1,end_offset1); 			myip[2] = (uint8_t)strtoul( ip1.c_str(), NULL, 10);			offset1 =  end_offset1 + 1;     
+			end_offset1 = ip.indexOf(",",offset1); ip1 = ip.substring(offset1,end_offset1); 			myip[3] = (uint8_t)strtoul( ip1.c_str(), NULL, 10);   	offset =  end_offset + 1;  
 
 			/* SUNNET */
 			offset1 = 0;
-			end_offset = strSetDate.indexOf("\n",offset);  ip = strSetDate.substring(offset,end_offset); 
-			//Serial.println(ip);   
-			end_offset1 = ip.indexOf(",",offset1); ip1 = ip.substring(offset1,end_offset1); 
-			maskip[0] = (uint8_t)strtoul( ip1.c_str(), NULL, 10);
-			offset1 =  end_offset1 + 1;
-
-			end_offset1 = ip.indexOf(",",offset1); ip1 = ip.substring(offset1,end_offset1); 
-			maskip[1] = (uint8_t)strtoul( ip1.c_str(), NULL, 10);
-			offset1 =  end_offset1 + 1;
-
-			end_offset1 = ip.indexOf(",",offset1); ip1 = ip.substring(offset1,end_offset1); 
-			maskip[2] = (uint8_t)strtoul( ip1.c_str(), NULL, 10);
-			offset1 =  end_offset1 + 1;     
-
-			end_offset1 = ip.indexOf(",",offset1); ip1 = ip.substring(offset1,end_offset1); 
-			maskip[3] = (uint8_t)strtoul( ip1.c_str(), NULL, 10);   
-
-			offset =  end_offset + 1;  
+			end_offset = strSetDate.indexOf("\n",offset);  ip = strSetDate.substring(offset,end_offset);      	//Serial.println(ip);   
+			end_offset1 = ip.indexOf(",",offset1); ip1 = ip.substring(offset1,end_offset1); 			maskip[0] = (uint8_t)strtoul( ip1.c_str(), NULL, 10);			offset1 =  end_offset1 + 1;
+			end_offset1 = ip.indexOf(",",offset1); ip1 = ip.substring(offset1,end_offset1); 			maskip[1] = (uint8_t)strtoul( ip1.c_str(), NULL, 10);			offset1 =  end_offset1 + 1;
+			end_offset1 = ip.indexOf(",",offset1); ip1 = ip.substring(offset1,end_offset1); 			maskip[2] = (uint8_t)strtoul( ip1.c_str(), NULL, 10);			offset1 =  end_offset1 + 1;     
+			end_offset1 = ip.indexOf(",",offset1); ip1 = ip.substring(offset1,end_offset1); 			maskip[3] = (uint8_t)strtoul( ip1.c_str(), NULL, 10);   	offset =  end_offset + 1;  
 
 			/* GW */
 			offset1 = 0;
-			end_offset = strSetDate.indexOf("\n",offset);  ip = strSetDate.substring(offset,end_offset); 
-			//Serial.println(ip);   
-			end_offset1 = ip.indexOf(",",offset1); ip1 = ip.substring(offset1,end_offset1); 
-			gwip[0] = (uint8_t)strtoul( ip1.c_str(), NULL, 10);
-			offset1 =  end_offset1 + 1;
-
-			end_offset1 = ip.indexOf(",",offset1); ip1 = ip.substring(offset1,end_offset1); 
-			gwip[1] = (uint8_t)strtoul( ip1.c_str(), NULL, 10);
-			offset1 =  end_offset1 + 1;
-
-			end_offset1 = ip.indexOf(",",offset1); ip1 = ip.substring(offset1,end_offset1); 
-			gwip[2] = (uint8_t)strtoul( ip1.c_str(), NULL, 10);
-			offset1 =  end_offset1 + 1;     
-
-			end_offset1 = ip.indexOf(",",offset1); ip1 = ip.substring(offset1,end_offset1); 
-			gwip[3] = (uint8_t)strtoul( ip1.c_str(), NULL, 10);   
-
-			offset =  end_offset + 1;  
+			end_offset = strSetDate.indexOf("\n",offset);  ip = strSetDate.substring(offset,end_offset); 			//Serial.println(ip);   
+			end_offset1 = ip.indexOf(",",offset1); ip1 = ip.substring(offset1,end_offset1); 			gwip[0] = (uint8_t)strtoul( ip1.c_str(), NULL, 10);			offset1 =  end_offset1 + 1;
+			end_offset1 = ip.indexOf(",",offset1); ip1 = ip.substring(offset1,end_offset1); 			gwip[1] = (uint8_t)strtoul( ip1.c_str(), NULL, 10);			offset1 =  end_offset1 + 1;
+			end_offset1 = ip.indexOf(",",offset1); ip1 = ip.substring(offset1,end_offset1); 			gwip[2] = (uint8_t)strtoul( ip1.c_str(), NULL, 10);			offset1 =  end_offset1 + 1;     
+			end_offset1 = ip.indexOf(",",offset1); ip1 = ip.substring(offset1,end_offset1); 			gwip[3] = (uint8_t)strtoul( ip1.c_str(), NULL, 10);   	offset =  end_offset + 1;  
 
 			/* DNS */
 			offset1 = 0;
-			end_offset = strSetDate.indexOf("\n",offset);  ip = strSetDate.substring(offset,end_offset); 
-			//Serial.println(ip);   
-			end_offset1 = ip.indexOf(",",offset1); ip1 = ip.substring(offset1,end_offset1); 
-			dnsip[0] = (uint8_t)strtoul( ip1.c_str(), NULL, 10);
-			offset1 =  end_offset1 + 1;
-
-			end_offset1 = ip.indexOf(",",offset1); ip1 = ip.substring(offset1,end_offset1); 
-			dnsip[1] = (uint8_t)strtoul( ip1.c_str(), NULL, 10);
-			offset1 =  end_offset1 + 1;
-
-			end_offset1 = ip.indexOf(",",offset1); ip1 = ip.substring(offset1,end_offset1); 
-			dnsip[2] = (uint8_t)strtoul( ip1.c_str(), NULL, 10);
-			offset1 =  end_offset1 + 1;     
-
-			end_offset1 = ip.indexOf(",",offset1); ip1 = ip.substring(offset1,end_offset1); 
-			dnsip[3] = (uint8_t)strtoul( ip1.c_str(), NULL, 10);   
-
-			offset =  end_offset + 1;  
+			end_offset = strSetDate.indexOf("\n",offset);  ip = strSetDate.substring(offset,end_offset); 			//Serial.println(ip);   
+			end_offset1 = ip.indexOf(",",offset1); ip1 = ip.substring(offset1,end_offset1); 			dnsip[0] = (uint8_t)strtoul( ip1.c_str(), NULL, 10);			offset1 =  end_offset1 + 1;
+			end_offset1 = ip.indexOf(",",offset1); ip1 = ip.substring(offset1,end_offset1); 			dnsip[1] = (uint8_t)strtoul( ip1.c_str(), NULL, 10);			offset1 =  end_offset1 + 1;
+			end_offset1 = ip.indexOf(",",offset1); ip1 = ip.substring(offset1,end_offset1); 			dnsip[2] = (uint8_t)strtoul( ip1.c_str(), NULL, 10);			offset1 =  end_offset1 + 1;     
+			end_offset1 = ip.indexOf(",",offset1); ip1 = ip.substring(offset1,end_offset1); 			dnsip[3] = (uint8_t)strtoul( ip1.c_str(), NULL, 10);   		offset =  end_offset + 1;  
 #endif		          
 		} 
     
@@ -285,14 +232,19 @@ void vSDCardSetParmLoad( )
 			//Serial.println(strSetDate);   
 
 			uint16_t from = 0;      uint16_t to;      String s0 = "";
-			to = strSetDate.indexOf("\n",from);  s0 = strSetDate.substring(from,to); from =  to + 1; //Serial.println(s0);   
+			//to = strSetDate.indexOf("\n",from);  s0 = strSetDate.substring(from,to); from =  to + 1; //Serial.println(s0);   
 
-			uint16_t idx = 0;      uint16_t edx;      String s1="";
-			edx = s0.indexOf("/",idx);     s1 = s0.substring(idx , edx + 1);         s1.toCharArray(website,edx + 1); idx =  edx; //Serial.print(website);   
-			edx = s0.indexOf("\n",idx);  s1 = s0.substring(idx, edx + 1);   s1.toCharArray(suburl,edx + 1);   //Serial.println(suburl);   
+			//uint16_t idx = 0;      uint16_t edx;      String s1="";
+			//edx = s0.indexOf("/",idx);     s1 = s0.substring(idx , edx + 1);         s1.toCharArray(strWebSite,edx + 1); idx =  edx; //Serial.print(website);   
+			//edx = s0.indexOf("\n",idx);  s1 = s0.substring(idx, edx + 1);   s1.toCharArray((suburl),edx + 1);   //Serial.println((suburl));   
 
-			to = strSetDate.indexOf("\n",from);  s0 = strSetDate.substring(from,to); s0.toCharArray(arrDeviceName,to);  from =  to + 1;    //Serial.println(arrDeviceName);   
-			to = strSetDate.indexOf("\n",from);  s0 = strSetDate.substring(from,to); s0.toCharArray(arrDeviceSerial,to);  from = to + 1;   //Serial.println(arrDeviceSerial);  
+			to = strSetDate.indexOf("\n",from);  s0 = strSetDate.substring(from,to); from = to + 1;	strWebSite = s0;	//Serial.println(arrDeviceName);   
+			to = strSetDate.indexOf("\n",from);  s0 = strSetDate.substring(from,to); from = to + 1; strSubSyncUrl = strSubLogUrl = s0; //Serial.println(arrDeviceSerial);
+			to = strSetDate.indexOf("\n",from);  s0 = strSetDate.substring(from,to); from = to + 1; strSubSyncUrl += s0; //Serial.println(arrDeviceName);   
+			to = strSetDate.indexOf("\n",from);  s0 = strSetDate.substring(from,to); from = to + 1; strSubLogUrl += s0;//Serial.println(arrDeviceSerial); 
+
+			to = strSetDate.indexOf("\n",from);  s0 = strSetDate.substring(from,to); from = to + 1; strDeviceName = s0;   //Serial.println(arrDeviceName);   
+			to = strSetDate.indexOf("\n",from);  s0 = strSetDate.substring(from,to); from = to + 1; strDeviceSerial = s0; //Serial.println(arrDeviceSerial);  
 			to = strSetDate.indexOf("\n",from);  s0 = strSetDate.substring(from,to); RelayONTime = (uint16_t)(strtoul( s0.c_str(), NULL, 10));  from = to + 1;  //Serial.println(RelayONTime);  
 			//to = strSetDate.indexOf("\0",from-5);
 			s0 = strSetDate.substring(from,from + 2); FireVoltage = (uint16_t)strtoul( s0.c_str(), NULL, 10);  //Serial.println(FireVoltage);  
@@ -424,6 +376,10 @@ void vSDCardUidDataLoad(uint8_t * uid )
 	//Serial.println((const char*)pathStr.c_str());       
 
 	setEvent(&ActiveEvent , RFID_DONE);
+
+	RelayOntime = millis() + RelayONTime;
+	clearEvent(&ActiveEvent ,RFID_DONE);
+	digitalWrite(RELAY_PIN, HIGH);
 
 	if (SD.exists(pathStr))
 	{

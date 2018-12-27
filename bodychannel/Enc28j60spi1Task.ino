@@ -18,16 +18,17 @@ uint32_t LogTimeOut;
 
 
 static uint8_t static_IP = 0; 
-//static char website[]  = "body.ibuild.kr";
-//static char suburl[]  = "/door_control/sync.php";
 static uint8_t mymac[6] = { 0x74,0x69,0x69,0x2D,0x30,0x31 };
-static char website[]  = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
-static char suburl[]  = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
-
 static uint8_t myip[4];   ///< IP address
 static uint8_t maskip[4]; ///< Netmask
 static uint8_t gwip[4];   ///< Gateway
 static uint8_t dnsip[4]; ///< DHCP server IP address
+
+static String strWebSite = "";
+static String strSubLogUrl = "";
+static String strSubSyncUrl = "";
+static String strDeviceName  = "67CU65SU7LGE64SQIOuNsOuqqA==";
+static String strDeviceSerial = "2000";
 
 #define BUFFER_SIZE 2048
 byte Ethernet::buffer[BUFFER_SIZE];
@@ -65,7 +66,7 @@ void vEnc28j60spi1Task_setup(void)
 	ether.printIp("DNS: ", ether.dnsip);
 
 	// use DNS to resolve the website's IP address
-	if (!ether.dnsLookup(website))
+	if (!ether.dnsLookup(strWebSite.c_str()))
 		Serial.println("DNS failed");
 
 	ether.printIp("SRV: ", ether.hisip);
@@ -90,12 +91,13 @@ void vEnc28j60spi1Task(void)
 			vSDCardSyncDateLoad( ) ;
 			const char *cstr = strSyncDate.c_str();
 			sprintf(paramStr,"?SyncType=1&SyncDate=%s", cstr);
+			
        		#ifdef DEBUG_ENC28J60
 			//Serial.println((const char*)paramStr); 
-      		Serial.print(website);Serial.print(suburl);Serial.println(paramStr);
+      		Serial.print(strWebSite);Serial.print(strSubSyncUrl);Serial.println(paramStr);
       		#endif
-      		ether.browseUrl((const char*)suburl, (const char*)paramStr , (const char*)website, SyncInit_callback);
-      		//ether.browseUrl(PSTR("/door_control/sync.php"), (const char*)paramStr , website, SyncInit_callback);
+      		ether.browseUrl((const char*)strSubSyncUrl.c_str(), (const char*)paramStr , (const char*)strWebSite.c_str(), SyncInit_callback);
+      		//ether.browseUrl(PSTR("/door_control/sync.php"), (const char*)paramStr , strWebSite.c_str(), SyncInit_callback);
       
 			sNo = 0;
 			sCnt = sCntMax;
@@ -108,9 +110,9 @@ void vEnc28j60spi1Task(void)
 			sprintf(paramStr, "?sNo=%d&sCount=%d&SyncDate=%s",sNo,sCnt, cstr); 
       		#ifdef DEBUG_ENC28J60
 			//Serial.println((const char*)paramStr);  
-      		Serial.print(website);Serial.print(suburl);Serial.println(paramStr);
+      		Serial.print(strWebSite);Serial.print(strSubSyncUrl);Serial.println(paramStr);
       		#endif
-      		ether.browseUrl((const char*)suburl,(const char*)paramStr, (const char*)website, SyncData_callback);
+      		ether.browseUrl((const char*)strSubSyncUrl.c_str(),(const char*)paramStr, (const char*)strWebSite.c_str(), SyncData_callback);
  			EthernetTimer = millis() + 2000; 
 		}
 		else //idle
@@ -182,8 +184,8 @@ static void SyncData_callback (byte status, uint16_t off, uint16_t len)
 		char paramStr[150]; 
 		sprintf(paramStr,"?sNo=%d&sCount=%d&SyncDate=0",sNo,sCnt); 
 		//Serial.println(paramStr);
-		//ether.browseUrl(PSTR("/door_control/sync.php"),(const char*)paramStr, website, SyncData_callback);
-		ether.browseUrl((const char*)suburl, (const char*)paramStr , (const char*)website, SyncInit_callback);
+		//ether.browseUrl(PSTR("/door_control/sync.php"),(const char*)paramStr, strWebSite, SyncData_callback);
+		ether.browseUrl((const char*)strSubSyncUrl.c_str(), (const char*)paramStr , (const char*)strWebSite.c_str(), SyncInit_callback);
 	}
 	else
 #endif
@@ -214,24 +216,6 @@ static void SyncData_callback (byte status, uint16_t off, uint16_t len)
 				sprintf(s, "%08X " ,uIDArry[index].uid);
 				sprintf(sa, "%02X" ,uIDArry[index].auth);
 				//Serial.println(sa);
-
-				/*
-				String folder01 = "CardInfo/" + String(s).substring(0, 2);
-				String folder02 = String(s).substring(2, 4);
-				String folder03 = String(s).substring(4, 6);
-				//String folderFile = String(s).substring(6, 8);
-				String folderFile = String(s).substring(2, 8);
-				String FileState = String(sa);
-
-				//vSDCardFolder(folder01);
-				//vSDCardFolder(folder01 + "/" + folder02);
-				
-				
-				vSDCardFolder(folder01 + "/" + folder02 + "/" + folder03);
-				vSDCardFile(folder01 + "/" + folder02 + "/" + folder03 + "/" + folderFile , FileState);
-				//vSDCardFile(folder01 + "/" + folder02 + "/" + folderFile , FileState);
-				//vSDCardFile(folder01 + "/" + folderFile , FileState);
-				*/
 
 				String folder01 = String(s).substring(0, 2);
 				String folder02 = String(s).substring(2, 5);
@@ -290,9 +274,9 @@ void etherLogData(uint8_t * uid )
 
 	String str_logData = strLogDate + "-" + strLogUID;
 
-	const char *cstr = str_logData.c_str();
-	sprintf(paramStr,"?%s", cstr);
-	ether.browseUrl((const char*)suburl, (const char*)paramStr , (const char*)website, log_callback);
+	//const char *cstr = str_logData.c_str();
+	//sprintf(paramStr,"?%s", cstr);
+	ether.browseUrl((const char*)strSubLogUrl.c_str(), (const char*)str_logData.c_str(), (const char*)strWebSite.c_str(), log_callback);
 
 	LogAckFlag = true;
 

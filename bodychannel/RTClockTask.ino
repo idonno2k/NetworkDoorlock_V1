@@ -163,7 +163,7 @@ void vRTCTask()
 						"Content-Type: application/x-www-form-urlencoded" "\r\n"
 						"\r\n"/*이것때문에 안된거였음 헐~~*/
 						"$H"),
-						website,suburl,stash.size(),sd);
+						strWebSite.c_str(),strSubLogUrl.c_str(),stash.size(),sd);
 					
 					ether.tcpSend();
 
