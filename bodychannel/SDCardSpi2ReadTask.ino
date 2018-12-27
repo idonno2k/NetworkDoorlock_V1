@@ -238,10 +238,10 @@ void vSDCardSetParmLoad( )
 			//edx = s0.indexOf("/",idx);     s1 = s0.substring(idx , edx + 1);         s1.toCharArray(strWebSite,edx + 1); idx =  edx; //Serial.print(website);   
 			//edx = s0.indexOf("\n",idx);  s1 = s0.substring(idx, edx + 1);   s1.toCharArray((suburl),edx + 1);   //Serial.println((suburl));   
 
-			to = strSetDate.indexOf("\n",from);  s0 = strSetDate.substring(from,to); from = to + 1;	strWebSite = s0;	//Serial.println(arrDeviceName);   
+			to = strSetDate.indexOf("\n",from);  s0 = strSetDate.substring(from,to); from = to + 1;	strWebSite = s0;	Serial.println(strWebSite);   
 			to = strSetDate.indexOf("\n",from);  s0 = strSetDate.substring(from,to); from = to + 1; strSubSyncUrl = strSubLogUrl = s0; //Serial.println(arrDeviceSerial);
-			to = strSetDate.indexOf("\n",from);  s0 = strSetDate.substring(from,to); from = to + 1; strSubSyncUrl += s0; //Serial.println(arrDeviceName);   
-			to = strSetDate.indexOf("\n",from);  s0 = strSetDate.substring(from,to); from = to + 1; strSubLogUrl += s0;//Serial.println(arrDeviceSerial); 
+			to = strSetDate.indexOf("\n",from);  s0 = strSetDate.substring(from,to); from = to + 1; strSubSyncUrl += s0; Serial.println(strSubSyncUrl);   
+			to = strSetDate.indexOf("\n",from);  s0 = strSetDate.substring(from,to); from = to + 1; strSubLogUrl += s0;Serial.println(strSubLogUrl); 
 
 			to = strSetDate.indexOf("\n",from);  s0 = strSetDate.substring(from,to); from = to + 1; strDeviceName = s0;   //Serial.println(arrDeviceName);   
 			to = strSetDate.indexOf("\n",from);  s0 = strSetDate.substring(from,to); from = to + 1; strDeviceSerial = s0; //Serial.println(arrDeviceSerial);  
@@ -272,8 +272,9 @@ void vSDCardLogData( )
 		//sprintf(arr_loguid, "%02X%02X%02X%02X", uid[0],uid[1],uid[2],uid[3]);
 
 		String str_logFolder = "LOG";
-		String str_logFile = strLogDate;
-		String str_logData = strLogUID;
+		//String str_logFile = strLogDate;
+		String str_logFile = strLogDate.substring(8,14);
+		String str_logData = strLogDate + "-" + strLogUID;
 
 		vSDCardFolder(str_logFolder);
 

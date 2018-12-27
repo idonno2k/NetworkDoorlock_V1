@@ -113,7 +113,7 @@ void vEnc28j60spi1Task(void)
       		Serial.print(strWebSite);Serial.print(strSubSyncUrl);Serial.println(paramStr);
       		#endif
       		ether.browseUrl((const char*)strSubSyncUrl.c_str(),(const char*)paramStr, (const char*)strWebSite.c_str(), SyncData_callback);
- 			EthernetTimer = millis() + 2000; 
+ 			EthernetTimer = millis() + 30000; 
 		}
 		else //idle
 		{
