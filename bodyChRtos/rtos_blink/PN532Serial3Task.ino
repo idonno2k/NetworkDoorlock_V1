@@ -4,7 +4,7 @@
 #include <PN532_HSU.h>
 #include <PN532.h>
 
-static uint32_t RfidTimer;
+//static uint32_t RfidTimer;
 
 PN532_HSU pn532hsu(Serial3);
 PN532 nfc(pn532hsu);
@@ -48,7 +48,7 @@ void vPN532Serial3Task(void)
 
 	//===============================================================
 	//rfid loop 500ms
-	if (millis() > RfidTimer) 
+	//if (millis() > RfidTimer) 
 	{
 		//digitalWrite(PC13, HIGH);
 		success = nfc.readPassiveTargetID(PN532_MIFARE_ISO14443A, &uid[0], &uidLength,50);
@@ -71,9 +71,12 @@ void vPN532Serial3Task(void)
 			// Serial.print(rfid_event, HEX);
 		#endif
 
-			vSDCardUidDataLoad(uid) ;
-			etherLogData( uid ) ;
-
+      vSDCardUidDataLoad(uid) ;
+      etherLogData( uid ) ;
+      
+      vTaskDelay(500);//wait log timeout
+      
+      vSDCardLogData() ;
 
 		}
 		else
@@ -83,22 +86,26 @@ void vPN532Serial3Task(void)
 		  //Serial.println("Timed out waiting for a card");
 		  #endif
 		}
-	 #ifdef DEBUG_PN532
+	#ifdef DEBUG_PN532
 		//Serial.print(".");
-#endif
-	RfidTimer = millis() + 1000;
+  #endif
+
 	}                 // wait for a second
-
-
-	if (millis() > LogTimeOut) 
-	{
-		vSDCardLogData() ;
-	}
-
-
-  
+ 
 }
 
+static void vPN532TaskLoop(void *pvParameters) 
+{
+
+    vPN532Serial3Task_setup();      
+    vTaskDelay(100);
+  
+    for (;;) 
+    {
+      vPN532Serial3Task(); 
+      vTaskDelay(500);
+    }
+}
 
 
 #endif

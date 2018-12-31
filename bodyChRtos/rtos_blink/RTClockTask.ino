@@ -82,11 +82,6 @@ void SecondCount ()
 {
   curTimeTag++;
 }
-// This function is called in the attachSecondsInterrpt
-void blink () 
-{
- digitalWrite(PC13,!digitalRead(PC13));
-}
 
 void rtc_setup() 
 {
@@ -97,35 +92,4 @@ void rtc_setup()
   rtclock.attachSecondsInterrupt(SecondCount);// Call SecondCount
 }
 
-String strLastLogPath="";
-void vRTCTask() 
-{
- /* 
-  if ( Serial.available()>10 ) {
-    for (uint8_t i = 0; i<11; i++) {
-      dateread[i] = Serial.read();
-    }
-    Serial.flush();
-    curTimeTag = atol((char*)dateread);
-    rtclock.setTime(rtclock.TimeZone(curTimeTag, timezone)); //adjust to your local date
-  }
-*/
-
-
-  if (curTimeTag >= lastTimeTag)//log
-  {
-     lastTimeTag = curTimeTag + 60; 
-
-    // get and print actual RTC timestamp
-    rtclock.breakTime(rtclock.now(), TimeStamp);
-    //sprintf(currLogPath, "\n %s %u %u, %s, %02u:%02u:%02u\n", months[TimeStamp.month], TimeStamp.day, TimeStamp.year+1970, weekdays[TimeStamp.weekday], TimeStamp.hour, TimeStamp.minute, TimeStamp.second);
-
-
-   // if(TimeStamp.minute == 0)
-    {
-
-	        
-   	}
-
-  }
-}
+//String strLastLogPath="";

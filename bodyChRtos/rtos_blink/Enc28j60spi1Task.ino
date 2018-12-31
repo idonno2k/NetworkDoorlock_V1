@@ -14,8 +14,6 @@ etherState EtherStep = SyncIdle;
 uint8_t LogAckFlag = false;
 
 static uint32_t EthernetTimer;
-uint32_t LogTimeOut;
-
 
 static uint8_t static_IP = 0; 
 static uint8_t mymac[6] = { 0x74,0x69,0x69,0x2D,0x30,0x31 };
@@ -233,7 +231,7 @@ static void SyncData_callback (byte status, uint16_t off, uint16_t len)
 				vSDCardFolder(folder01 + "/" + folder02);
 				vSDCardFile(folder01 + "/" + folder02 + "/" + folderFile , FileState);                   
         
-       			vPN532Serial3Task();
+       	//vPN532Serial3Task();
         
 			}
       #ifdef DEBUG_ENC28J60
@@ -287,8 +285,6 @@ void etherLogData(uint8_t * uid )
 	ether.browseUrl((const char*)strSubLogUrl.c_str(), (const char*)str_logData.c_str(), (const char*)strWebSite.c_str(), log_callback);
 
 	LogAckFlag = true;
-
-	LogTimeOut = millis() + 500;
 
 }
 
@@ -369,3 +365,15 @@ static void log_callback (byte status, uint16_t off, uint16_t len)
 	LogAckFlag = false;
 }
 #endif  
+
+static void vEn28j60TaskLoop(void *pvParameters) 
+{
+
+  vEnc28j60spi1Task_setup();      
+  vTaskDelay(100);
+  
+    for (;;) 
+    {
+      vEnc28j60spi1Task();
+    }
+}
