@@ -81,10 +81,10 @@ static void vLEDFlashTask(void *pvParameters)
 {
     for (;;) 
     {
-        vTaskDelay(50);      digitalWrite(LED2_PIN, HIGH);
-        vTaskDelay(50);      digitalWrite(LED2_PIN, LOW);
-        vTaskDelay(50);      digitalWrite(LED2_PIN, HIGH);
-        vTaskDelay(50);      digitalWrite(LED2_PIN, LOW);
+        vTaskDelay(50);      digitalWrite(LED1_PIN, HIGH);
+        vTaskDelay(50);      digitalWrite(LED1_PIN, LOW);
+        vTaskDelay(50);      digitalWrite(LED1_PIN, HIGH);
+        vTaskDelay(50);      digitalWrite(LED1_PIN, LOW);
         vTaskDelay(300); 
         vEventTask();
     }

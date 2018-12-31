@@ -173,6 +173,7 @@ UID uIDArry[sCntMax];
 
 static void SyncData_callback (byte status, uint16_t off, uint16_t len)
 {
+  digitalWrite(LED2_PIN, LOW);
 	Ethernet::buffer[off+len] = 0;
 #ifdef DEBUG_ENC28J60
 	//Serial.print("SyncData_callback");
@@ -255,7 +256,7 @@ static void SyncData_callback (byte status, uint16_t off, uint16_t len)
 		}
 		#endif
 	}
-	
+	digitalWrite(LED2_PIN, HIGH);
 	EthernetTimer = millis() + 100;
 
 }
