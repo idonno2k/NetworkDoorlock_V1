@@ -4,6 +4,8 @@
 #include <SPI.h>
 #include <SD.h>
 
+
+
 Sd2Card card;
 SdVolume volume;
 SdFile root;
@@ -72,6 +74,7 @@ void vSDCardSpi2ReadTask_setup(void)
 
 void vSDCardFolder(String ns ) 
 {
+  xSemaphoreTake( xBinarySemaphore, portMAX_DELAY );  
 	//Serial.println(ns);    
 	if (SD.exists(ns))
 	{
@@ -86,9 +89,11 @@ void vSDCardFolder(String ns )
 		SD.mkdir(ns);
 		#endif
 	}   
+  xSemaphoreGive( xBinarySemaphore );
 }
 void vSDCardFile(String ns , String divi) 
 {
+  xSemaphoreTake( xBinarySemaphore, portMAX_DELAY );  
 	//Serial.println(divi);    
 	if(divi == "79")
 	{
@@ -110,11 +115,13 @@ void vSDCardFile(String ns , String divi)
 		//Serial.println("n");    
 		SD.remove(ns);
 	}
+ xSemaphoreGive( xBinarySemaphore );
  }
 
 
 void vSDCardSetParmLoad( ) 
 {
+  xSemaphoreTake( xBinarySemaphore, portMAX_DELAY );  
 	File myFile;
 
 	strSetDate = ""; 
@@ -176,40 +183,7 @@ void vSDCardSetParmLoad( )
 			end_offset = strSetDate.indexOf("\n",offset);  ip = strSetDate.substring(offset,end_offset); ether.parseIp(maskip ,(char*)ip.c_str()); offset = end_offset + 1;
 			end_offset = strSetDate.indexOf("\n",offset);  ip = strSetDate.substring(offset,end_offset); ether.parseIp(gwip ,(char*)ip.c_str()); offset = end_offset + 1;     
 			end_offset = strSetDate.indexOf("\n",offset);  ip = strSetDate.substring(offset,end_offset); ether.parseIp(dnsip ,(char*)ip.c_str());
-
-#if 0
-			/* IP */
-			end_offset = strSetDate.indexOf("\n",offset);  ip = strSetDate.substring(offset,end_offset); 
-
-			end_offset1 = ip.indexOf(",",offset1); ip1 = ip.substring(offset1,end_offset1); 			myip[0] = (uint8_t)strtoul( ip1.c_str(), NULL, 10);			offset1 =  end_offset1 + 1;
-			end_offset1 = ip.indexOf(",",offset1); ip1 = ip.substring(offset1,end_offset1); 			myip[1] = (uint8_t)strtoul( ip1.c_str(), NULL, 10);			offset1 =  end_offset1 + 1;
-			end_offset1 = ip.indexOf(",",offset1); ip1 = ip.substring(offset1,end_offset1); 			myip[2] = (uint8_t)strtoul( ip1.c_str(), NULL, 10);			offset1 =  end_offset1 + 1;     
-			end_offset1 = ip.indexOf(",",offset1); ip1 = ip.substring(offset1,end_offset1); 			myip[3] = (uint8_t)strtoul( ip1.c_str(), NULL, 10);   	offset =  end_offset + 1;  
-
-			/* SUNNET */
-			offset1 = 0;
-			end_offset = strSetDate.indexOf("\n",offset);  ip = strSetDate.substring(offset,end_offset);      	//Serial.println(ip);   
-			end_offset1 = ip.indexOf(",",offset1); ip1 = ip.substring(offset1,end_offset1); 			maskip[0] = (uint8_t)strtoul( ip1.c_str(), NULL, 10);			offset1 =  end_offset1 + 1;
-			end_offset1 = ip.indexOf(",",offset1); ip1 = ip.substring(offset1,end_offset1); 			maskip[1] = (uint8_t)strtoul( ip1.c_str(), NULL, 10);			offset1 =  end_offset1 + 1;
-			end_offset1 = ip.indexOf(",",offset1); ip1 = ip.substring(offset1,end_offset1); 			maskip[2] = (uint8_t)strtoul( ip1.c_str(), NULL, 10);			offset1 =  end_offset1 + 1;     
-			end_offset1 = ip.indexOf(",",offset1); ip1 = ip.substring(offset1,end_offset1); 			maskip[3] = (uint8_t)strtoul( ip1.c_str(), NULL, 10);   	offset =  end_offset + 1;  
-
-			/* GW */
-			offset1 = 0;
-			end_offset = strSetDate.indexOf("\n",offset);  ip = strSetDate.substring(offset,end_offset); 			//Serial.println(ip);   
-			end_offset1 = ip.indexOf(",",offset1); ip1 = ip.substring(offset1,end_offset1); 			gwip[0] = (uint8_t)strtoul( ip1.c_str(), NULL, 10);			offset1 =  end_offset1 + 1;
-			end_offset1 = ip.indexOf(",",offset1); ip1 = ip.substring(offset1,end_offset1); 			gwip[1] = (uint8_t)strtoul( ip1.c_str(), NULL, 10);			offset1 =  end_offset1 + 1;
-			end_offset1 = ip.indexOf(",",offset1); ip1 = ip.substring(offset1,end_offset1); 			gwip[2] = (uint8_t)strtoul( ip1.c_str(), NULL, 10);			offset1 =  end_offset1 + 1;     
-			end_offset1 = ip.indexOf(",",offset1); ip1 = ip.substring(offset1,end_offset1); 			gwip[3] = (uint8_t)strtoul( ip1.c_str(), NULL, 10);   	offset =  end_offset + 1;  
-
-			/* DNS */
-			offset1 = 0;
-			end_offset = strSetDate.indexOf("\n",offset);  ip = strSetDate.substring(offset,end_offset); 			//Serial.println(ip);   
-			end_offset1 = ip.indexOf(",",offset1); ip1 = ip.substring(offset1,end_offset1); 			dnsip[0] = (uint8_t)strtoul( ip1.c_str(), NULL, 10);			offset1 =  end_offset1 + 1;
-			end_offset1 = ip.indexOf(",",offset1); ip1 = ip.substring(offset1,end_offset1); 			dnsip[1] = (uint8_t)strtoul( ip1.c_str(), NULL, 10);			offset1 =  end_offset1 + 1;
-			end_offset1 = ip.indexOf(",",offset1); ip1 = ip.substring(offset1,end_offset1); 			dnsip[2] = (uint8_t)strtoul( ip1.c_str(), NULL, 10);			offset1 =  end_offset1 + 1;     
-			end_offset1 = ip.indexOf(",",offset1); ip1 = ip.substring(offset1,end_offset1); 			dnsip[3] = (uint8_t)strtoul( ip1.c_str(), NULL, 10);   		offset =  end_offset + 1;  
-#endif		          
+		          
 		} 
     
 	}
@@ -251,7 +225,7 @@ void vSDCardSetParmLoad( )
 
 		} 
 	}
- 
+ xSemaphoreGive( xBinarySemaphore );
 }
 
 
@@ -278,12 +252,13 @@ void vSDCardLogData( )
 
 		vSDCardFolder(str_logFolder);
 
+xSemaphoreTake( xBinarySemaphore, portMAX_DELAY );  
 		File myFile;
-		myFile = SD.open(str_logFolder +"/"+str_logFile, FILE_WRITE);
+		myFile = SD.open(str_logFolder +"/"+str_logFile + "\n", FILE_WRITE);
 		myFile.seek(myFile.size());
 		myFile.print(str_logData.c_str());
 		myFile.close();
-
+xSemaphoreGive( xBinarySemaphore );
 		LogAckFlag = false;
 	}
 
@@ -292,6 +267,7 @@ void vSDCardLogData( )
 
 void vSDCardLogRead(String logPath ) 
 {
+  xSemaphoreTake( xBinarySemaphore, portMAX_DELAY );  
   File myFile;
  
 //   rtclock.breakTime(rtclock.now(), TimeStamp);
@@ -313,11 +289,12 @@ void vSDCardLogRead(String logPath )
 			myFile.close();
 		} 
 	}
-  
+  xSemaphoreGive( xBinarySemaphore );
 }
 
 void vSDCardSyncDate( String sDate ) 
 {
+  xSemaphoreTake( xBinarySemaphore, portMAX_DELAY );  
 	if (SD.exists(strSyncPath))
 		SD.remove(strSyncPath);
 	
@@ -325,33 +302,39 @@ void vSDCardSyncDate( String sDate )
 	myFile = SD.open(strSyncPath, FILE_WRITE);
 	myFile.print(sDate);
 	myFile.close();
+ xSemaphoreGive( xBinarySemaphore );
 }
 
 void vSDCardSyncDateLoad( ) 
 {
-	File myFile;
-	//int StringDec;
-	//char arrUIDchar;
+     if(xSemaphoreTake( xBinarySemaphore, ( TickType_t ) 10 ) == pdTRUE )
+     {
+          Serial.println(" xSemaphoreTake( xBinarySemaphore, ( portTickType ) 0 )");
+          File myFile;
+          //int StringDec;
+          //char arrUIDchar;
+        
+          strSyncDate = "";
+          if (SD.exists(strSyncPath)) 
+          {
+            myFile = SD.open(strSyncPath);
+            strSyncDate = "";
+            if (myFile) 
+            {
+              // read from the file until there's nothing else in it:
+              while (myFile.available()) 
+              {
+                char tmpchar = (char)(myFile.read());
+                if(tmpchar != '\r')
+                  strSyncDate += tmpchar;
+              }
+        
+              myFile.close();
+            } 
+          }
+          xSemaphoreGive( xBinarySemaphore );
+     }
 
-	strSyncDate = "";
-	if (SD.exists(strSyncPath))	
-	{
-		myFile = SD.open(strSyncPath);
-		strSyncDate = "";
-		if (myFile) 
-		{
-			// read from the file until there's nothing else in it:
-			while (myFile.available()) 
-			{
-				char tmpchar = (char)(myFile.read());
-				if(tmpchar != '\r')
-					strSyncDate += tmpchar;
-			}
-
-			myFile.close();
-		} 
-	}
-  
 }
 
 
@@ -382,6 +365,8 @@ void vSDCardUidDataLoad(uint8_t * uid )
 	//clearEvent(&ActiveEvent ,RFID_DONE);
 	//digitalWrite(RELAY_PIN, HIGH);
 
+
+  xSemaphoreTake( xBinarySemaphore, portMAX_DELAY );  
 	if (SD.exists(pathStr))
 	{
 		strAuthUid = "";
@@ -417,6 +402,8 @@ void vSDCardUidDataLoad(uint8_t * uid )
 		myFile.close();  
     #endif
 	}
+ xSemaphoreGive( xBinarySemaphore );
+ 
 }
 
 

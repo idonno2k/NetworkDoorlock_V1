@@ -43,12 +43,16 @@ static uint32_t RelayOntime = 0;
 
 #include <MapleFreeRTOS900.h>
 
+xSemaphoreHandle xBinarySemaphore = NULL; 
+
 void setup() 
 {
     Serial.begin(115200);
     delay(1000);
-    
+   
     Serial.println(F("Generic STM32F103C8 with bootloader...\r\n"));
+
+   vSemaphoreCreateBinary( xBinarySemaphore );   delay(1000);
 
     vSDCardSpi2ReadTask_setup();    delay(100);    
     vSDCardSyncDateLoad();          delay(100);
@@ -63,7 +67,7 @@ void setup()
 
     xTaskCreate(vLEDFlashTask, "Task1", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 2,  NULL);
     xTaskCreate(vEn28j60TaskLoop, "Task2", configMINIMAL_STACK_SIZE+512, NULL, tskIDLE_PRIORITY + 2,  NULL);
-    xTaskCreate(vPN532TaskLoop, "Task3", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 2,  NULL);
+    xTaskCreate(vPN532TaskLoop, "Task3", configMINIMAL_STACK_SIZE+512, NULL, tskIDLE_PRIORITY + 2,  NULL);
       
     vTaskStartScheduler();
 }
