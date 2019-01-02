@@ -69,7 +69,7 @@ void setup()
 
     xTaskCreate(vLEDFlashTask, "Task1", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 2,  NULL);
     xTaskCreate(vEn28j60TaskLoop, "Task2", configMINIMAL_STACK_SIZE+512, NULL, tskIDLE_PRIORITY + 2,  NULL);
-    xTaskCreate(vPN532TaskLoop, "Task3", configMINIMAL_STACK_SIZE+512, NULL, tskIDLE_PRIORITY + 2,  NULL);
+    xTaskCreate(vPN532TaskLoop, "Task3", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 2,  NULL);
       
     vTaskStartScheduler();
 }

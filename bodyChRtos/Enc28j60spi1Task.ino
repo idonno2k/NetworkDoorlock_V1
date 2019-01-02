@@ -146,22 +146,25 @@ static void SyncInit_callback (byte status, uint16_t off, uint16_t len)
 	char *ptrtok = strtok(ptr+5, "[]");
 	sDateNum = (uint16_t)strtoul( ptrtok, NULL, 10);
 #ifdef DEBUG_ENC28J60
-	Serial.print("sDateNum : ");
-	Serial.println(sDateNum);
+	Serial.print("sDateNum : ");	Serial.println(sDateNum);
 #endif
 
 	ptrtok = strtok(NULL, "[]");
 	strSyncDateNew = (const char*)ptrtok;
 #ifdef DEBUG_ENC28J60
-	Serial.print("strSyncDate : ");
-	Serial.print(strSyncDateNew);
+	Serial.print("strSyncDate : ");	Serial.print(strSyncDateNew);
 	Serial.println("");
 #endif
 
   RtcTimeSet(strSyncDateNew);  
-  if(sDateNum == 0)
-    EtherStep = SyncIdle;
+
+if(sDateNum < sCntMax)
+  sCnt = sDateNum;
   
+  if(sDateNum == 0)
+  {
+    EtherStep = SyncLogPush;
+  }
 	EthernetTimer = millis() + 100;
 }
 
@@ -173,7 +176,7 @@ UID uIDArry[sCntMax];
 
 static void SyncData_callback (byte status, uint16_t off, uint16_t len)
 {
-  digitalWrite(LED2_PIN, LOW);
+  digitalWrite(LED2_PIN, HIGH);
 	Ethernet::buffer[off+len] = 0;
 #ifdef DEBUG_ENC28J60
 	//Serial.print("SyncData_callback");
@@ -209,7 +212,7 @@ static void SyncData_callback (byte status, uint16_t off, uint16_t len)
 		if(ptr != NULL)
 		{
 			
-			for(int index=0 ; index < sCntMax ; index++)
+			for(int index=0 ; index < sCnt ; index++)
 			{
         #ifdef DEBUG_ENC28J60
 				//Serial.print((const char*)ptr);Serial.print(" ");
@@ -222,7 +225,7 @@ static void SyncData_callback (byte status, uint16_t off, uint16_t len)
 				char sa[2]="";
 				sprintf(s, "%08X " ,uIDArry[index].uid);
 				sprintf(sa, "%02X" ,uIDArry[index].auth);
-				//Serial.println(sa);
+				//Serial.println(s);
 
 				String folder01 = String(s).substring(0, 2);
 				String folder02 = String(s).substring(2, 5);
@@ -235,9 +238,6 @@ static void SyncData_callback (byte status, uint16_t off, uint16_t len)
        	//vPN532Serial3Task();
         
 			}
-      #ifdef DEBUG_ENC28J60
-			Serial.println("");
-	  #endif
 		  
 			sNo = sNo + sCnt;
 			if((sDateNum - sNo) < sCnt)
@@ -256,7 +256,7 @@ static void SyncData_callback (byte status, uint16_t off, uint16_t len)
 		}
 		#endif
 	}
-	digitalWrite(LED2_PIN, HIGH);
+	digitalWrite(LED2_PIN, LOW);
 	EthernetTimer = millis() + 100;
 
 }
