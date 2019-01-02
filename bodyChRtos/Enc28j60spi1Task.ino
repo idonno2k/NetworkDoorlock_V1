@@ -125,6 +125,7 @@ void vEnc28j60spi1Task(void)
 		{
 			EtherStep = SyncInit;
 			EthernetTimer = millis() + 300000;
+     // EthernetTimer = millis() + 3000;
 
 		}
 

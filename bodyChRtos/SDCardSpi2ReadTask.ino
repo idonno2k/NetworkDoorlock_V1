@@ -73,7 +73,8 @@ void vSDCardSpi2ReadTask_setup(void)
 
 void vSDCardFolder(String ns ) 
 {
-  //xSemaphoreTake( xBinarySemaphore, portMAX_DELAY );  
+  //xSemaphoreTake( xBinarySemaphore, portMAX_DELAY ); 
+xSemaphoreTake( xBinarySemaphore, 10 ); 
 	//Serial.println(ns);    
 	if (SD.exists(ns))
 	{
@@ -93,6 +94,7 @@ void vSDCardFolder(String ns )
 void vSDCardFile(String ns , String divi) 
 {
   //xSemaphoreTake( xBinarySemaphore, portMAX_DELAY );  
+  xSemaphoreTake( xBinarySemaphore, 10 ); 
 	//Serial.println(divi);    
 	if(divi == "79")
 	{
