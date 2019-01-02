@@ -20,7 +20,10 @@ void vPN532Serial3Task_setup(void)
   if (! versiondata) 
   {
     Serial.print("Didn't find PN53x board");
-    while (1); // halt
+    while (1)// halt
+    {
+      vTaskDelay(5000);
+     }
   }
   
   // Got ok data, print it out!
