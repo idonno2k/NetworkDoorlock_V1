@@ -61,7 +61,8 @@ void setup()
 
     rtc_setup(); delay(100);
 
-    pinMode(LED2_PIN, OUTPUT);    digitalWrite(LED2_PIN, LOW);delay(100);//led
+    pinMode(LED1_PIN, OUTPUT);    digitalWrite(LED1_PIN, HIGH);delay(100);//led
+    pinMode(LED2_PIN, OUTPUT);    digitalWrite(LED2_PIN, HIGH);delay(100);//led
     pinMode(RELAY_PIN, OUTPUT);    digitalWrite(RELAY_PIN, LOW);delay(100);//relay
     pinMode(BUZZ_PIN, OUTPUT);    delay(100);//buzzer
     pinMode(FIRE_PIN, INPUT);    delay(100);//fire alert

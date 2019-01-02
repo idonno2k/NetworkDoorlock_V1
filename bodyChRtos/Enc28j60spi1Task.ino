@@ -296,7 +296,8 @@ void etherLogPush()
 		File entry =  log_dir.openNextFile();
 		if (! entry) 
 		{
-			// no more files
+			Serial.println("no more files");
+      entry.close();
 			break;
 		}
 
@@ -304,9 +305,9 @@ void etherLogPush()
 	   String str_entry_name = entry.name();
 	   if (!entry.isDirectory()) 
 	   {
-      
-		   File myFile = SD.open(str_entry_name);
-		   strLogDate = str_entry_name + "-";
+      Serial.println(str_entry_name);
+		   File myFile = SD.open("/LOG/" + str_entry_name);
+		   strLogDate = "";
 		   if (myFile) 
 		   {
 			   // read from the file until there's nothing else in it:
@@ -316,8 +317,9 @@ void etherLogPush()
 			   }
 			   myFile.close();
 
-			   strLogDate += strDeviceName + "_" +  strDeviceSerial;
-
+			   strLogDate += "DeviceName=" + strDeviceName + "&" +  "DeviceSerial=" + strDeviceSerial;
+        Serial.println(strLogDate);
+        
 			   byte sd = stash.create();
 			   stash.println(strLogDate.c_str() );
 			   stash.save();
@@ -332,16 +334,17 @@ void etherLogPush()
 			   
 			   ether.tcpSend();
 
-			   
+			   SD.remove("/LOG/" + str_entry_name);
 		   } 
 
 	   }
 	   entry.close();
+    xSemaphoreGive( xBinarySemaphore );
     vTaskDelay(100);
 	}
 
-	SD.rmdir("LOG");
-   xSemaphoreGive( xBinarySemaphore );
+	//SD.rmdir("LOG");
+   
    vTaskDelay(100);
 }
 

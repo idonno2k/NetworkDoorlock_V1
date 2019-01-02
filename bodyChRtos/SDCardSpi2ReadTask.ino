@@ -247,7 +247,7 @@ void vSDCardLogData( )
 		//String str_logFile = strLogDate;
 		String str_logFile = strLogDate.substring(8,14);
 		//String str_logData = strLogDate + "-" + strLogUID;
-    String str_logData = "?log=" + strLogDate + "&rf=" + strLogUID;
+    String str_logData = "log=" + strLogDate + "&rf=" + strLogUID;
 
 		vSDCardFolder(str_logFolder);
 

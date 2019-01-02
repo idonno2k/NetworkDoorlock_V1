@@ -19,7 +19,7 @@ void vPN532Serial3Task_setup(void)
   uint32_t versiondata = nfc.getFirmwareVersion();
   if (! versiondata) 
   {
-    Serial.print("Didn't find PN53x board");
+    Serial.println("Didn't find PN53x board");
     while (1)// halt
     {
       vTaskDelay(5000);
