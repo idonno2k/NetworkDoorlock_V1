@@ -322,7 +322,7 @@ void etherLogPush()
 			   stash.println(strLogDate.c_str() );
 			   stash.save();
 			   
-			   Stash::prepare(PSTR("POST http://$F/$F" "\r\n"
+			   Stash::prepare(PSTR("POST http://$F/$F HTTP/1.1" "\r\n"
 				   "Host: $F" "\r\n"
 				   "Content-Length: $D" "\r\n"
 				   "Content-Type: application/x-www-form-urlencoded" "\r\n"
