@@ -17,6 +17,7 @@ const char * months[] = {"Dummy", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul
 //============================================
 //extern
 extern String strLogDate; 
+extern String strLogUID;  
 extern String strSyncDate; 
 extern String strSyncDateNew;
 

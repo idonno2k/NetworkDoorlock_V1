@@ -70,14 +70,33 @@ void vPN532Serial3Task(void)
 		#ifdef DEBUG_PN532
 			// Serial.print(rfid_event, HEX);
 		#endif
-
-      vSDCardUidDataLoad(uid) ;
-      etherLogData( uid ) ;
+    
+     rtclock.breakTime(rtclock.now(), logTimeStamp);
+     vSDCardUidDataLoad(uid) ;
+  
+      char arr_logdata[20]; 
+      char arr_loguid[10]; 
       
-      vTaskDelay(500);//wait log timeout
+      sprintf(arr_logdata, "%u%02u%02u%02u%02u%02u",  logTimeStamp.year+1970, logTimeStamp.month, logTimeStamp.day,logTimeStamp.hour, logTimeStamp.minute, logTimeStamp.second);
+      sprintf(arr_loguid, "%02X%02X%02X%02X", uid[0],uid[1],uid[2],uid[3]);
       
-      vSDCardLogData() ;
-
+      strLogDate = arr_logdata;
+      strLogUID = arr_loguid;
+      
+      //String str_logData = "?log=" + strLogDate + "&rf=" + strLogUID;
+  
+      LogAckFlag = true;
+      if(EtherStep == SyncIdle)
+      {
+        etherLogData( ) ;
+        vTaskDelay(500);//wait log_callback timeout
+      }
+      
+      if(LogAckFlag == true)
+      {
+       vSDCardLogData() ;
+       LogAckFlag = false;
+      }
 		}
 		else
 		{

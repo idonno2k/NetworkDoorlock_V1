@@ -16,7 +16,6 @@ String strIpPath = "IP";
 String strSetPath = "SET";
 String strMacPath = "MAC";
 String strSetDate = "20181219000000"; 
-String strLogDate = ""; 
 
 String strSyncDate = ""; 
 String strSyncDateNew = ""; 
@@ -233,8 +232,7 @@ void vSDCardSetParmLoad( )
 
 void vSDCardLogData( ) 
 {
-	if(LogAckFlag == true)
-	{
+
 		//char arr_logdata[128]; 
 		//char arr_loguid[20]; 
 		//char arr_logfilename[128]; 
@@ -248,7 +246,8 @@ void vSDCardLogData( )
 		String str_logFolder = "LOG";
 		//String str_logFile = strLogDate;
 		String str_logFile = strLogDate.substring(8,14);
-		String str_logData = strLogDate + "-" + strLogUID;
+		//String str_logData = strLogDate + "-" + strLogUID;
+    String str_logData = "?log=" + strLogDate + "&rf=" + strLogUID;
 
 		vSDCardFolder(str_logFolder);
 
@@ -259,8 +258,7 @@ xSemaphoreTake( xBinarySemaphore, portMAX_DELAY );
 		myFile.print(str_logData.c_str());
 		myFile.close();
 xSemaphoreGive( xBinarySemaphore );
-		LogAckFlag = false;
-	}
+
 
 }
 

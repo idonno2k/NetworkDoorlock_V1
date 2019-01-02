@@ -262,31 +262,28 @@ static void SyncData_callback (byte status, uint16_t off, uint16_t len)
 }
 
 
-//String strLogDate; 
+String strLogDate; 
 String strLogUID; 
-void etherLogData(uint8_t * uid ) 
+void etherLogData( )
 {
-	char arr_logdata[128]; 
-	char arr_loguid[20]; 
-	char arr_logfilename[128]; 
+	//char arr_logdata[128]; 
+	//char arr_loguid[20]; 
+	//char arr_logfilename[128]; 
 
-	rtclock.breakTime(rtclock.now(), logTimeStamp);
+	//rtclock.breakTime(rtclock.now(), logTimeStamp);
 
 	//sprintf(arr_logdata, "%s %u %u, %s, %02u:%02u:%02u : ", months[logTimeStamp.month], logTimeStamp.day, logTimeStamp.year+1970, weekdays[logTimeStamp.weekday], logTimeStamp.hour, logTimeStamp.minute, logTimeStamp.second);
-	sprintf(arr_logdata, "%u%u%u%02u%02u%02u",  logTimeStamp.year+1970, logTimeStamp.month, logTimeStamp.day,logTimeStamp.hour, logTimeStamp.minute, logTimeStamp.second);
-	sprintf(arr_loguid, "%02X%02X%02X%02X", uid[0],uid[1],uid[2],uid[3]);
+	//sprintf(arr_logdata, "%u%u%u%02u%02u%02u",  logTimeStamp.year+1970, logTimeStamp.month, logTimeStamp.day,logTimeStamp.hour, logTimeStamp.minute, logTimeStamp.second);
+	//sprintf(arr_loguid, "%02X%02X%02X%02X", uid[0],uid[1],uid[2],uid[3]);
 
-	strLogDate = arr_logdata;
-	strLogUID = arr_loguid;
+	//strLogDate = arr_logdata;
+	//strLogUID = arr_loguid;
 
-	String str_logData = strLogDate + "-" + strLogUID;
+	String str_logData = "?log=" + strLogDate + "&rf=" + strLogUID;
 
 	//const char *cstr = str_logData.c_str();
 	//sprintf(paramStr,"?%s", cstr);
 	ether.browseUrl((const char*)strSubLogUrl.c_str(), (const char*)str_logData.c_str(), (const char*)strWebSite.c_str(), log_callback);
-
-	LogAckFlag = true;
-
 }
 
 void etherLogPush()
@@ -295,7 +292,7 @@ void etherLogPush()
 
 	while(true)
 	{
-
+    xSemaphoreTake( xBinarySemaphore, portMAX_DELAY ); 
 		File entry =  log_dir.openNextFile();
 		if (! entry) 
 		{
@@ -307,6 +304,7 @@ void etherLogPush()
 	   String str_entry_name = entry.name();
 	   if (!entry.isDirectory()) 
 	   {
+      
 		   File myFile = SD.open(str_entry_name);
 		   strLogDate = str_entry_name + "-";
 		   if (myFile) 
@@ -339,9 +337,12 @@ void etherLogPush()
 
 	   }
 	   entry.close();
+    vTaskDelay(100);
 	}
 
 	SD.rmdir("LOG");
+   xSemaphoreGive( xBinarySemaphore );
+   vTaskDelay(100);
 }
 
 
