@@ -252,10 +252,12 @@ void vSDCardLogData( )
 		vSDCardFolder(str_logFolder);
 
 xSemaphoreTake( xBinarySemaphore, portMAX_DELAY );  
+
+//Serial.println(str_logFolder +"/"+ str_logFile);  
 		File myFile;
-		myFile = SD.open(str_logFolder +"/"+str_logFile + "\n", FILE_WRITE);
+		myFile = SD.open(str_logFolder +"/"+ str_logFile, FILE_WRITE);
 		myFile.seek(myFile.size());
-		myFile.print(str_logData.c_str());
+		myFile.println(str_logData.c_str());
 		myFile.close();
 xSemaphoreGive( xBinarySemaphore );
 
@@ -307,7 +309,7 @@ void vSDCardSyncDateLoad( )
 {
      if(xSemaphoreTake( xBinarySemaphore, ( TickType_t ) 10 ) == pdTRUE )
      {
-          Serial.println(" xSemaphoreTake( xBinarySemaphore, ( portTickType ) 0 )");
+          //Serial.println(" xSemaphoreTake( xBinarySemaphore, ( portTickType ) 0 )");
           File myFile;
           //int StringDec;
           //char arrUIDchar;

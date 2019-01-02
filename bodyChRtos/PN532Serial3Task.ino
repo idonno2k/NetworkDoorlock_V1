@@ -50,9 +50,8 @@ void vPN532Serial3Task(void)
 	//rfid loop 500ms
 	//if (millis() > RfidTimer) 
 	{
-		//digitalWrite(PC13, HIGH);
+		digitalWrite(LED1_PIN, LOW);
 		success = nfc.readPassiveTargetID(PN532_MIFARE_ISO14443A, &uid[0], &uidLength,50);
-		//digitalWrite(PC13, LOW);
 
 		if (success) 
 		{
@@ -82,9 +81,7 @@ void vPN532Serial3Task(void)
       
       strLogDate = arr_logdata;
       strLogUID = arr_loguid;
-      
-      //String str_logData = "?log=" + strLogDate + "&rf=" + strLogUID;
-  
+ 
       LogAckFlag = true;
       if(EtherStep == SyncIdle)
       {
@@ -108,7 +105,7 @@ void vPN532Serial3Task(void)
 	#ifdef DEBUG_PN532
 		//Serial.print(".");
   #endif
-
+digitalWrite(LED1_PIN, HIGH);
 	}                 // wait for a second
  
 }
