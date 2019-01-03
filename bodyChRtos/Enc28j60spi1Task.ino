@@ -12,6 +12,7 @@ enum etherState
 etherState EtherStep = SyncIdle;
 
 uint8_t LogAckFlag = false;
+uint8_t LogAckFlag1 = false;
 
 static uint32_t EthernetTimer;
 
@@ -78,6 +79,13 @@ uint16_t sNo = 0;
 uint16_t sCnt = 0;
 uint16_t sDateNum = 0;
 char paramStr[150];
+
+uint8_t LogStep=0;
+
+String strLogFilename;
+uint16_t from = 0; 
+
+
 void vEnc28j60spi1Task(void)
 {
   ether.packetLoop(ether.packetReceive());
@@ -115,11 +123,94 @@ void vEnc28j60spi1Task(void)
     }
     else if (EtherStep == SyncLogPush)
     {
+		if(LogStep == 0)
+		{
+			File log_dir = SD.open("/LOG/");
 
-      etherLogPush();
-      EtherStep = SyncIdle;
+		    xSemaphoreTake( xBinarySemaphore, portMAX_DELAY );
+		    File entry =  log_dir.openNextFile();
+		    if (! entry)
+		    {
+		      Serial.println("No more logfiles...");
+		      entry.close();
+		      xSemaphoreGive( xBinarySemaphore );
+		      EtherStep = SyncIdle;
+			  EthernetTimer = millis() + 30000;
+		    }
+			else
+			{
+			    //Serial.print(entry.name());
+			    strLogFilename = entry.name();
+			    if (!entry.isDirectory())
+			    {
+			      Serial.println(strLogFilename);
+			      File myFile = SD.open("/LOG/" + strLogFilename);
+			      strLogDate = "";
+			      if (myFile)
+			      {
+			        // read from the file until there's nothing else in it:
+			        while (myFile.available()) 
+			        {
+			          char tmpchar = (char)(myFile.read());
+			          if (tmpchar != '\r')
+			            strLogDate += tmpchar;
+			        }
+			        myFile.close();
+			      }
 
-      EthernetTimer = millis() + 30000;
+				}
+				entry.close();
+				LogStep=1;
+        		from = 0;
+			}
+
+			xSemaphoreGive( xBinarySemaphore );
+
+		}
+		else if(LogStep==1)
+		{
+			String s0 = "";
+			uint16_t to;
+
+			to = strLogDate.indexOf("\n", from);  s0 = strLogDate.substring(from, to); from = to + 1;     
+
+			Serial.print("Log : ");	Serial.println(s0);
+
+			if (s0 == "") 
+			{
+				xSemaphoreTake( xBinarySemaphore, portMAX_DELAY );
+				SD.remove("/LOG/" + strLogFilename);
+				xSemaphoreGive( xBinarySemaphore );
+				LogStep=0;
+			}
+			else
+			{
+				Serial.print("log push -> ");
+				ether.browseUrl((const char*)strSubLogUrl.c_str(), (const char*)s0.c_str(), (const char*)strWebSite.c_str(), log_callback);
+				LogAckFlag1 = true;
+				LogStep = 3;
+				EthernetTimer = millis() + 300;//wait callback
+			}
+			
+		}
+		else
+		{
+			if(LogAckFlag1 == true)//timeout 
+			{
+				LogStep = 0;
+				EtherStep = SyncIdle;
+			  	EthernetTimer = millis() + 30000;
+				Serial.println("timeout");
+
+			}
+			else//ok next log
+			{
+				Serial.println("ok");
+				LogStep = 1;
+			}
+		}
+
+      
     }
     else //idle
     {
@@ -296,89 +387,23 @@ void etherLogData( )
 
 }
 
+
+/*
+void etherLogRead()
+{
+
+}
+
+    
 void etherLogPush()
 {
-  File log_dir = SD.open("/LOG/");
-
-  while (true)
-  {
-    xSemaphoreTake( xBinarySemaphore, portMAX_DELAY );
-    File entry =  log_dir.openNextFile();
-    if (! entry)
-    {
-      Serial.println("no more files");
-      entry.close();
-      xSemaphoreGive( xBinarySemaphore );
-      break;
-    }
-
-    //Serial.print(entry.name());
-    String str_entry_name = entry.name();
-    if (!entry.isDirectory())
-    {
-      Serial.println(str_entry_name);
-      File myFile = SD.open("/LOG/" + str_entry_name);
-      strLogDate = "";
-      if (myFile)
-      {
-        // read from the file until there's nothing else in it:
-        while (myFile.available()) {
-          char tmpchar = (char)(myFile.read());
-          if (tmpchar != '\r')
-            strLogDate += tmpchar;
-        }
-        myFile.close();
-
-        //strLogDate += "DeviceName=" + strDeviceName + "&" +  "DeviceSerial=" + strDeviceSerial;
-        //Serial.println(strLogDate);
-
-        uint16_t from = 0;      uint16_t to;      String s0 = "";
-        String sendStr = "";
-        
-        while (true) {
-          to = strLogDate.indexOf("\n", from);  s0 = strLogDate.substring(from, to); from = to + 1;     
-          sendStr = s0;
-          
-          if (sendStr == "") {
-            break;
-          }
-                
-          ether.browseUrl((const char*)strSubLogUrl.c_str(), (const char*)sendStr.c_str(), (const char*)strWebSite.c_str(), log_callback);
-          //delay(500);
-        }
-        //SD.remove("/LOG/" + str_entry_name);
 
 
-        /*
-          byte sd = stash.create();
-          stash.println(strLogDate.c_str() );
-          stash.save();
 
-          Stash::prepare(PSTR("POST http://$F/$F HTTP/1.1" "\r\n"
-           "Host: $F" "\r\n"
-           "Content-Length: $D" "\r\n"
-           "Content-Type: application/x-www-form-urlencoded" "\r\n"
-           "\r\n"
-           "$H"),
-           strWebSite.c_str(),strSubLogUrl.c_str(),stash.size(),sd);
+}    
 
-          ether.tcpSend();
+    */
 
-          SD.remove("/LOG/" + str_entry_name);
-        */
-
-      }
-
-    }
-    entry.close();
-    xSemaphoreGive( xBinarySemaphore );
-    vTaskDelay(100);
-  }
-
-  //SD.rmdir("LOG");
-
-  vTaskDelay(100);
-}
 
 
 static void log_callback (byte status, uint16_t off, uint16_t len)
@@ -386,8 +411,6 @@ static void log_callback (byte status, uint16_t off, uint16_t len)
   Ethernet::buffer[off + len] = 0;
 
   Serial.print("log_callback");
-
-  
 
   String rs;
   rs = (const char*) Ethernet::buffer + off;
@@ -410,6 +433,7 @@ static void log_callback (byte status, uint16_t off, uint16_t len)
 */
 
   LogAckFlag = false;
+  LogAckFlag1= false;
 }
 #endif
 
@@ -422,5 +446,14 @@ static void vEn28j60TaskLoop(void *pvParameters)
   for (;;)
   {
     vEnc28j60spi1Task();
+  }
+}
+
+static void vPacketReceiveLoop(void *pvParameters)
+{
+  for (;;)
+  {
+   // vTaskDelay(1);
+    ether.packetLoop(ether.packetReceive());
   }
 }

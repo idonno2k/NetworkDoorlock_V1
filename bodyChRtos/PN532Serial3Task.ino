@@ -55,7 +55,12 @@ void vPN532Serial3Task(void)
 	{
 		digitalWrite(LED1_PIN, LOW);
 		success = nfc.readPassiveTargetID(PN532_MIFARE_ISO14443A, &uid[0], &uidLength,50);
+//uid[0]=0x89;
+//uid[1]=0xAB;
+//uid[2]=0xCD;
+//uid[3]=0xEF;
 
+//success = true;
 		if (success) 
 		{
 		#ifdef DEBUG_PN532
