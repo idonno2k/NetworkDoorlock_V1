@@ -16,9 +16,9 @@ const char * months[] = {"Dummy", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul
 
 //============================================
 //extern
-extern String strLogDate; 
-extern String strLogUID;  
-extern String strSyncDate; 
+extern String strLogDate;
+extern String strLogUID;
+extern String strSyncDate;
 extern String strSyncDateNew;
 
 extern tm_t logTimeStamp;
@@ -44,93 +44,93 @@ static uint32_t RelayOntime = 0;
 
 #include <MapleFreeRTOS900.h>
 
-xSemaphoreHandle xBinarySemaphore = NULL; 
+xSemaphoreHandle xBinarySemaphore = NULL;
 
-void setup() 
+void setup()
 {
-    Serial.begin(115200);
-    delay(1000);
-   
-    Serial.println(F("Generic STM32F103C8 with bootloader...\r\n"));
+  Serial.begin(115200);
+  delay(1000);
 
-   vSemaphoreCreateBinary( xBinarySemaphore );   delay(1000);
+  Serial.println(F("Generic STM32F103C8 with bootloader...\r\n"));
 
-    vSDCardSpi2ReadTask_setup();    delay(100);    
-    vSDCardSyncDateLoad();          delay(100);
-    vSDCardSetParmLoad() ;          delay(100);
+  vSemaphoreCreateBinary( xBinarySemaphore );   delay(1000);
 
-    rtc_setup(); delay(100);
+  vSDCardSpi2ReadTask_setup();    delay(100);
+  vSDCardSyncDateLoad();          delay(100);
+  vSDCardSetParmLoad() ;          delay(100);
 
-    pinMode(LED1_PIN, OUTPUT);    digitalWrite(LED1_PIN, HIGH);delay(100);//led
-    pinMode(LED2_PIN, OUTPUT);    digitalWrite(LED2_PIN, HIGH);delay(100);//led
-    pinMode(RELAY_PIN, OUTPUT);    digitalWrite(RELAY_PIN, LOW);delay(100);//relay
-    pinMode(BUZZ_PIN, OUTPUT);    delay(100);//buzzer
-    pinMode(FIRE_PIN, INPUT);    delay(100);//fire alert
+  rtc_setup(); delay(100);
 
-    xTaskCreate(vLEDFlashTask, "Task1", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 2,  NULL);
-    xTaskCreate(vEn28j60TaskLoop, "Task2", configMINIMAL_STACK_SIZE+512, NULL, tskIDLE_PRIORITY + 2,  NULL);
-    xTaskCreate(vPN532TaskLoop, "Task3", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 2,  NULL);
-      
-    vTaskStartScheduler();
+  pinMode(LED1_PIN, OUTPUT);    digitalWrite(LED1_PIN, HIGH); delay(100); //led
+  pinMode(LED2_PIN, OUTPUT);    digitalWrite(LED2_PIN, HIGH); delay(100); //led
+  pinMode(RELAY_PIN, OUTPUT);    digitalWrite(RELAY_PIN, LOW); delay(100); //relay
+  pinMode(BUZZ_PIN, OUTPUT);    delay(100);//buzzer
+  pinMode(FIRE_PIN, INPUT);    delay(100);//fire alert
+
+  xTaskCreate(vLEDFlashTask, "Task1", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 2,  NULL);
+  xTaskCreate(vEn28j60TaskLoop, "Task2", configMINIMAL_STACK_SIZE + 512, NULL, tskIDLE_PRIORITY + 2,  NULL);
+  xTaskCreate(vPN532TaskLoop, "Task3", configMINIMAL_STACK_SIZE+512  , NULL, tskIDLE_PRIORITY + 2,  NULL);
+
+  vTaskStartScheduler();
 }
 
-void loop() 
+void loop()
 {
-    // Insert background code here
+  // Insert background code here
 }
 
-static void vLEDFlashTask(void *pvParameters) 
+static void vLEDFlashTask(void *pvParameters)
 {
-    for (;;) 
-    {
-        vTaskDelay(50);      digitalWrite(LED1_PIN, HIGH);
-        vTaskDelay(50);      digitalWrite(LED1_PIN, LOW);
-        vTaskDelay(50);      digitalWrite(LED1_PIN, HIGH);
-        vTaskDelay(50);      digitalWrite(LED1_PIN, LOW);
-        vTaskDelay(300); 
-        vEventTask();
-    }
+  for (;;)
+  {
+    vTaskDelay(50);      digitalWrite(LED1_PIN, HIGH);
+    vTaskDelay(50);      digitalWrite(LED1_PIN, LOW);
+    vTaskDelay(50);      digitalWrite(LED2_PIN, HIGH);
+    vTaskDelay(50);      digitalWrite(LED2_PIN, LOW);
+    vTaskDelay(300);
+    vEventTask();
+  }
 }
 
-void vEventTask(void) 
+void vEventTask(void)
 {
-  if (digitalRead(FIRE_PIN) == HIGH)setEvent(&ActiveEvent ,FIRE_ON);
-  else  clearEvent(&ActiveEvent ,FIRE_ON);
+  if (digitalRead(FIRE_PIN) == HIGH)setEvent(&ActiveEvent , FIRE_ON);
+  else  clearEvent(&ActiveEvent , FIRE_ON);
 
-      if((ActiveEvent & RFID_DONE) == RFID_DONE)
-      {
-        clearEvent(&ActiveEvent ,RFID_DONE);
-        digitalWrite(RELAY_PIN, HIGH);  digitalWrite(LED2_PIN, HIGH);
-        vTaskDelay(3000);
-        digitalWrite(RELAY_PIN, LOW);   digitalWrite(LED2_PIN, LOW);
+  if ((ActiveEvent & RFID_DONE) == RFID_DONE)
+  {
+    clearEvent(&ActiveEvent , RFID_DONE);
+    digitalWrite(RELAY_PIN, HIGH);  digitalWrite(LED2_PIN, HIGH);
+    vTaskDelay(3000);
+    digitalWrite(RELAY_PIN, LOW);   digitalWrite(LED2_PIN, LOW);
 
-        #ifdef DEBUG
-        Serial.print("-");   
-        #endif
-      }
-      else if((ActiveEvent & FIRE_ON) == FIRE_ON)
-      {
-        digitalWrite(RELAY_PIN, HIGH);
-      }
-      else if((ActiveEvent & REMOTE_ON) == REMOTE_ON)
-      {
-        digitalWrite(RELAY_PIN, HIGH);
-      }
-      else
-      {
-          digitalWrite(RELAY_PIN, LOW);
-          #ifdef DEBUG
-          Serial.print("_");   
-          #endif
-      }
+#ifdef DEBUG
+    Serial.print("-");
+#endif
+  }
+  else if ((ActiveEvent & FIRE_ON) == FIRE_ON)
+  {
+    digitalWrite(RELAY_PIN, HIGH);
+  }
+  else if ((ActiveEvent & REMOTE_ON) == REMOTE_ON)
+  {
+    digitalWrite(RELAY_PIN, HIGH);
+  }
+  else
+  {
+    digitalWrite(RELAY_PIN, LOW);
+#ifdef DEBUG
+    Serial.print("_");
+#endif
+  }
 
 }
 
-void setEvent(uint8_t* event ,uint8_t event_code)
+void setEvent(uint8_t* event , uint8_t event_code)
 {
   *event = *event | event_code;
 }
-void clearEvent(uint8_t* event ,uint8_t event_code)
+void clearEvent(uint8_t* event , uint8_t event_code)
 {
   *event = *event  & ~event_code;
- }
+}

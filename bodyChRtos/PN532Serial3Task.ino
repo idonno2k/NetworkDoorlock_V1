@@ -72,10 +72,11 @@ void vPN532Serial3Task(void)
 		#ifdef DEBUG_PN532
 			// Serial.print(rfid_event, HEX);
 		#endif
-    
+
+
      rtclock.breakTime(rtclock.now(), logTimeStamp);
      vSDCardUidDataLoad(uid) ;
-  
+
       char arr_logdata[20]; 
       char arr_loguid[10]; 
       
@@ -86,6 +87,8 @@ void vPN532Serial3Task(void)
       strLogUID = arr_loguid;
  
       LogAckFlag = true;
+      
+      //Serial.println(EtherStep);
       if(EtherStep == SyncIdle)
       {
         etherLogData( ) ;
