@@ -45,30 +45,51 @@ void vEnc28j60spi1Task_setup(void)
   afio_remap(AFIO_REMAP_SPI1); // remap SPI1
   if (ether.begin(sizeof Ethernet::buffer, mymac, PA15) == 0)
   {
+#ifdef DEBUG_ENC28J60
     Serial.println(F("Failed to access Ethernet controller"));
+#endif
   }
 
   if ( static_IP == 1)
   {
+#ifdef DEBUG_ENC28J60
     Serial.println("STATIC_IP");
-    if (!ether.staticSetup(myip, gwip, dnsip, maskip))
+#endif
+    if (!ether.staticSetup(myip, gwip, dnsip, maskip)) {
+#ifdef DEBUG_ENC28J60
       Serial.println("static setup failed");
+#endif
+    }
+
   }
   else
   {
+#ifdef DEBUG_ENC28J60
     Serial.println("DHCP:");
-    if (!ether.dhcpSetup())
+#endif
+
+    if (!ether.dhcpSetup()) {
+#ifdef DEBUG_ENC28J60
       Serial.println(F("DHCP failed"));
+#endif
+    }
   }
+#ifdef DEBUG_ENC28J60
   ether.printIp("IP:  ", ether.myip);
   ether.printIp("GW:  ", ether.gwip);
   ether.printIp("DNS: ", ether.dnsip);
+#endif
 
   // use DNS to resolve the website's IP address
-  if (!ether.dnsLookup(strWebSite.c_str()))
+  if (!ether.dnsLookup(strWebSite.c_str())) {
+#ifdef DEBUG_ENC28J60
     Serial.println("DNS failed");
+#endif
+  }
 
+#ifdef DEBUG_ENC28J60
   ether.printIp("SRV: ", ether.hisip);
+#endif
 
   EtherStep = SyncInit;
   EthernetTimer = millis();
@@ -80,10 +101,10 @@ uint16_t sCnt = 0;
 uint16_t sDateNum = 0;
 char paramStr[150];
 
-uint8_t LogStep=0;
+uint8_t LogStep = 0;
 
 String strLogFilename;
-uint16_t from = 0; 
+uint16_t from = 0;
 
 
 void vEnc28j60spi1Task(void)
@@ -123,100 +144,112 @@ void vEnc28j60spi1Task(void)
     }
     else if (EtherStep == SyncLogPush)
     {
-		if(LogStep == 0)
-		{
-			File log_dir = SD.open("/LOG/");
+      if (LogStep == 0)
+      {
+        File log_dir = SD.open("/LOG/");
 
-		    xSemaphoreTake( xBinarySemaphore, portMAX_DELAY );
-		    File entry =  log_dir.openNextFile();
-		    if (! entry)
-		    {
-		      Serial.println("No more logfiles...");
-		      entry.close();
-		      xSemaphoreGive( xBinarySemaphore );
-		      EtherStep = SyncIdle;
-			  EthernetTimer = millis() + 30000;
-		    }
-			else
-			{
-			    //Serial.print(entry.name());
-			    strLogFilename = entry.name();
-			    if (!entry.isDirectory())
-			    {
-			      Serial.println(strLogFilename);
-			      File myFile = SD.open("/LOG/" + strLogFilename);
-			      strLogDate = "";
-			      if (myFile)
-			      {
-			        // read from the file until there's nothing else in it:
-			        while (myFile.available()) 
-			        {
-			          char tmpchar = (char)(myFile.read());
-			          if (tmpchar != '\r')
-			            strLogDate += tmpchar;
-			        }
-			        myFile.close();
-			      }
+        xSemaphoreTake( xBinarySemaphore, portMAX_DELAY );
+        File entry =  log_dir.openNextFile();
+        if (! entry)
+        {
+#ifdef DEBUG_ENC28J60
+          Serial.println("No more logfiles...");
+#endif
+          entry.close();
+          xSemaphoreGive( xBinarySemaphore );
+          EtherStep = SyncIdle;
+          EthernetTimer = millis() + 30000;
+        }
+        else
+        {
+          //Serial.print(entry.name());
+          strLogFilename = entry.name();
+          if (!entry.isDirectory())
+          {
+#ifdef DEBUG_ENC28J60
+            Serial.println(strLogFilename);
+#endif
+            File myFile = SD.open("/LOG/" + strLogFilename);
+            strLogDate = "";
+            if (myFile)
+            {
+              // read from the file until there's nothing else in it:
+              while (myFile.available())
+              {
+                char tmpchar = (char)(myFile.read());
+                if (tmpchar != '\r')
+                  strLogDate += tmpchar;
+              }
+              myFile.close();
+            }
 
-				}
-				entry.close();
-				LogStep=1;
-        		from = 0;
-			}
+          }
+          entry.close();
+          LogStep = 1;
+          from = 0;
+        }
 
-			xSemaphoreGive( xBinarySemaphore );
+        xSemaphoreGive( xBinarySemaphore );
 
-		}
-		else if(LogStep==1)
-		{
-			String s0 = "";
-			uint16_t to;
+      }
+      else if (LogStep == 1)
+      {
+        String s0 = "";
+        uint16_t to;
 
-			to = strLogDate.indexOf("\n", from);  s0 = strLogDate.substring(from, to); from = to + 1;     
+        to = strLogDate.indexOf("\n", from);  s0 = strLogDate.substring(from, to); from = to + 1;
+#ifdef DEBUG_ENC28J60
+        Serial.print("Log : ");	Serial.println(s0);
+#endif
+        if (s0 == "")
+        {
+          xSemaphoreTake( xBinarySemaphore, portMAX_DELAY );
+          SD.remove("/LOG/" + strLogFilename);
+          xSemaphoreGive( xBinarySemaphore );
+          LogStep = 0;
+        }
+        else
+        {
+#ifdef DEBUG_ENC28J60
+          Serial.println("log push -> ");
+#endif
+          //Serial.println((const char*)strSubLogUrl.c_str());
+          //Serial.println((const char*)s0.c_str());
+          ether.browseUrl((const char*)strSubLogUrl.c_str(), (const char*)s0.c_str(), (const char*)strWebSite.c_str(), log_callback);
+          LogAckFlag1 = true;
+          LogStep = 3;
+          EthernetTimer = millis() + 300;//wait callback
+        }
 
-			Serial.print("Log : ");	Serial.println(s0);
+      }
+      else
+      {
+        if (LogAckFlag1 == true) //timeout
+        {
+          LogStep = 0;
+          EtherStep = SyncIdle;
+          EthernetTimer = millis() + 30000;
+#ifdef DEBUG_ENC28J60
+          Serial.println("timeout");
+#endif
 
-			if (s0 == "") 
-			{
-				xSemaphoreTake( xBinarySemaphore, portMAX_DELAY );
-				SD.remove("/LOG/" + strLogFilename);
-				xSemaphoreGive( xBinarySemaphore );
-				LogStep=0;
-			}
-			else
-			{
-				Serial.print("log push -> ");
-				ether.browseUrl((const char*)strSubLogUrl.c_str(), (const char*)s0.c_str(), (const char*)strWebSite.c_str(), log_callback);
-				LogAckFlag1 = true;
-				LogStep = 3;
-				EthernetTimer = millis() + 300;//wait callback
-			}
-			
-		}
-		else
-		{
-			if(LogAckFlag1 == true)//timeout 
-			{
-				LogStep = 0;
-				EtherStep = SyncIdle;
-			  	EthernetTimer = millis() + 30000;
-				Serial.println("timeout");
+        }
+        else//ok next log
+        {
+#ifdef DEBUG_ENC28J60
+          Serial.println("ok");
+#endif
+          LogStep = 1;
+        }
+      }
 
-			}
-			else//ok next log
-			{
-				Serial.println("ok");
-				LogStep = 1;
-			}
-		}
 
-      
     }
     else //idle
     {
       EtherStep = SyncInit;
       EthernetTimer = millis() + 300;
-      // EthernetTimer = millis() + 3000;
+      //EthernetTimer = millis() + 3000;
 
     }
 
@@ -270,89 +303,65 @@ static void SyncData_callback (byte status, uint16_t off, uint16_t len)
 {
   digitalWrite(LED2_PIN, HIGH);
   Ethernet::buffer[off + len] = 0;
+
+  char *ptr = strstr((const char*) Ethernet::buffer + off, "[[S]]");
 #ifdef DEBUG_ENC28J60
-  //Serial.print("SyncData_callback");
-  //Serial.print((const char*)Ethernet::buffer + off);
-  //char tmpStr[50];
-  //sprintf(tmpStr,"off=%d  len=%d sNo=%d & sCount=%d & sDateNum=%d",off,len ,sNo,sCnt,sDateNum);
-  //Serial.println(tmpStr);
+  Serial.print((const char*)ptr); Serial.println("");
 #endif
-
-#if 0 //Content-Length filter
-  char *ptr = strstr((const char*)Ethernet::buffer + off, "Content-Length:");
-  if (ptr == NULL)
-  {
-    Serial.println("HTTP fail...");
-    char paramStr[150];
-
-    str_logData += "&dn=" + strDeviceName + "&ds=" + strDeviceSerial;
-
-
-    sprintf(paramStr, "?sNo=%d&sCount=%d&SyncDate=0", sNo, sCnt);
-    //Serial.println(paramStr);
-    //ether.browseUrl(PSTR("/door_control/sync.php"),(const char*)paramStr, strWebSite, SyncData_callback);
-    ether.browseUrl((const char*)strSubSyncUrl.c_str(), (const char*)paramStr , (const char*)strWebSite.c_str(), SyncInit_callback);
-  }
-  else
-#endif
-  {
-    // Serial.print((const char*)Ethernet::buffer + off);Serial.println("");
-
-    char *ptr = strstr((const char*) Ethernet::buffer + off, "[[S]]");
-#ifdef DEBUG_ENC28J60
-    Serial.print((const char*)ptr); Serial.println("");
-#endif
-    ptr = ptr + 5;
-    ptr = strtok(ptr, ">");
+  ptr = ptr + 5;
+  ptr = strtok(ptr, ">");
 #if 1
-    if (ptr != NULL)
+  if (ptr != NULL)
+  {
+
+    for (int index = 0 ; index < sCnt ; index++)
     {
-
-      for (int index = 0 ; index < sCnt ; index++)
-      {
 #ifdef DEBUG_ENC28J60
-        //Serial.print((const char*)ptr);Serial.print(" ");
+      //Serial.print((const char*)ptr);Serial.print(" ");
 #endif
-        uIDArry[index].uid = strtoul( ptr, NULL, 16);
-        uIDArry[index].auth = *(ptr + 9);
-        ptr = strtok(NULL, ">");
+      uIDArry[index].uid = strtoul( ptr, NULL, 16);
+      uIDArry[index].auth = *(ptr + 9);
+      ptr = strtok(NULL, ">");
 
-        char s[10];
-        char sa[2] = "";
-        sprintf(s, "%08X " , uIDArry[index].uid);
-        sprintf(sa, "%02X" , uIDArry[index].auth);
-        //Serial.println(s);
+      char s[10];
+      char sa[2] = "";
+      sprintf(s, "%08X " , uIDArry[index].uid);
+      sprintf(sa, "%02X" , uIDArry[index].auth);
+      //Serial.println(s);
 
-        String folder01 = String(s).substring(0, 2);
-        String folder02 = String(s).substring(2, 5);
-        String folderFile = String(s).substring(2, 8);
-        String FileState = String(sa);
+      String folder01 = String(s).substring(0, 2);
+      String folder02 = String(s).substring(2, 5);
+      String folderFile = String(s).substring(2, 8);
+      String FileState = String(sa);
 
-        vSDCardFolder(folder01 + "/" + folder02);
-        vSDCardFile(folder01 + "/" + folder02 + "/" + folderFile , FileState);
+      vSDCardFolder(folder01 + "/" + folder02);
+      vSDCardFile(folder01 + "/" + folder02 + "/" + folderFile , FileState);
 
-        //vPN532Serial3Task();
-
-      }
-
-      sNo = sNo + sCnt;
-      if ((sDateNum - sNo) < sCnt)
-        sCnt = sDateNum - sNo;
-
-      if (sDateNum <=  sNo)
-      {
-        sNo = 0;
-        sCnt = 0;
-        sDateNum = 0;
-        EtherStep = SyncLogPush;
-        Serial.println("SyncData finished");
-        vSDCardSyncDate( strSyncDateNew );
-        //vSDCardSyncDate( "20181201000000" );
-      }
+      //vPN532Serial3Task();
 
     }
+
+    sNo = sNo + sCnt;
+    if ((sDateNum - sNo) < sCnt)
+      sCnt = sDateNum - sNo;
+
+    if (sDateNum <=  sNo)
+    {
+      sNo = 0;
+      sCnt = 0;
+      sDateNum = 0;
+      EtherStep = SyncLogPush;
+#ifdef DEBUG_ENC28J60
+      Serial.println("SyncData finished");
 #endif
+      vSDCardSyncDate( strSyncDateNew );
+      //vSDCardSyncDate( "20181201000000" );
+    }
+
   }
+#endif
+
+
   digitalWrite(LED2_PIN, LOW);
   EthernetTimer = millis() + 100;
 
@@ -389,20 +398,14 @@ void etherLogData( )
 
 
 /*
-void etherLogRead()
-{
+  void etherLogRead()
+  {
+  }
 
-}
-
-    
-void etherLogPush()
-{
-
-
-
-}    
-
-    */
+  void etherLogPush()
+  {
+  }
+*/
 
 
 
@@ -410,30 +413,21 @@ static void log_callback (byte status, uint16_t off, uint16_t len)
 {
   Ethernet::buffer[off + len] = 0;
 
-  Serial.print("log_callback");
+  //Serial.print("log_callback");
 
-  String rs;
-  rs = (const char*) Ethernet::buffer + off;
-  Serial.println(rs);
+  String rs = "n";
+  rs = (const char*) Ethernet::buffer + off + len - 1;
 
-   
-  /*
-   //char *ptr = strstr((const char*) Ethernet::buffer + off, "[[S]]");
-#ifdef DEBUG_ENC28J60
-  Serial.print((const char*)ptr);
-  Serial.println("");
-#endif
-  char *ptrtok = strtok(ptr + 5, "[]");
-  String str_log = (const char*)ptrtok;
-#ifdef DEBUG_ENC28J60
-  Serial.print("log ack : ");
-  Serial.print(str_log);
-  Serial.println("");
-#endif
-*/
 
-  LogAckFlag = false;
-  LogAckFlag1= false;
+
+  if (rs == "y") {
+    LogAckFlag1 = false;
+    LogAckFlag = false;
+  } else {
+    LogAckFlag1 = true;
+    LogAckFlag = true;
+  }
+
 }
 #endif
 
@@ -453,7 +447,7 @@ static void vPacketReceiveLoop(void *pvParameters)
 {
   for (;;)
   {
-   // vTaskDelay(1);
+    // vTaskDelay(1);
     ether.packetLoop(ether.packetReceive());
   }
 }

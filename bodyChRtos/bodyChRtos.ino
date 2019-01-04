@@ -48,13 +48,13 @@ xSemaphoreHandle xBinarySemaphore = NULL;
 
 void setup()
 {
+#ifdef DEBUG
   Serial.begin(115200);
   delay(1000);
-
   Serial.println(F("Generic STM32F103C8 with bootloader...\r\n"));
+#endif
 
   vSemaphoreCreateBinary( xBinarySemaphore );   delay(1000);
-
   vSDCardSpi2ReadTask_setup();    delay(100);
   vSDCardSyncDateLoad();          delay(100);
   vSDCardSetParmLoad() ;          delay(100);
@@ -68,8 +68,8 @@ void setup()
   pinMode(FIRE_PIN, INPUT);    delay(100);//fire alert
 
   xTaskCreate(vLEDFlashTask, "Task1", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 2,  NULL);
-  xTaskCreate(vEn28j60TaskLoop, "Task2", configMINIMAL_STACK_SIZE+512, NULL, tskIDLE_PRIORITY + 2,  NULL);
-  xTaskCreate(vPN532TaskLoop, "Task3", configMINIMAL_STACK_SIZE+512  , NULL, tskIDLE_PRIORITY + 2,  NULL);
+  xTaskCreate(vEn28j60TaskLoop, "Task2", configMINIMAL_STACK_SIZE + 512, NULL, tskIDLE_PRIORITY + 2,  NULL);
+  xTaskCreate(vPN532TaskLoop, "Task3", configMINIMAL_STACK_SIZE + 512  , NULL, tskIDLE_PRIORITY + 2,  NULL);
   //xTaskCreate(vPacketReceiveLoop, "Task4", configMINIMAL_STACK_SIZE+512  , NULL, tskIDLE_PRIORITY + 2,  NULL);
 
   vTaskStartScheduler();
@@ -88,7 +88,7 @@ static void vLEDFlashTask(void *pvParameters)
     vTaskDelay(50);      digitalWrite(LED1_PIN, LOW);
     vTaskDelay(50);      digitalWrite(LED2_PIN, HIGH);
     vTaskDelay(50);      digitalWrite(LED2_PIN, LOW);
-    vTaskDelay(300);
+    //vTaskDelay(300);
     vEventTask();
   }
 }
@@ -102,7 +102,7 @@ void vEventTask(void)
   {
     clearEvent(&ActiveEvent , RFID_DONE);
     digitalWrite(RELAY_PIN, HIGH);  digitalWrite(LED2_PIN, HIGH);
-    vTaskDelay(3000);
+    vTaskDelay(RelayONTime);
     digitalWrite(RELAY_PIN, LOW);   digitalWrite(LED2_PIN, LOW);
 
 #ifdef DEBUG

@@ -31,7 +31,10 @@ void vSDCardSpi2ReadTask_setup(void)
 
   if (!SD.begin(PB12))
   {
+    #ifdef DEBUG_SDCARD
     Serial.println("initialization failed!");
+    #endif
+    
     while (1);
   }
 
@@ -66,7 +69,9 @@ void vSDCardSpi2ReadTask_setup(void)
   // Now we will try to open the 'volume'/'partition' - it should be FAT16 or FAT32
   if (!volume.init(card))
   {
+    #ifdef DEBUG_SDCARD
     Serial.println("Could not find FAT16/FAT32 partition.\nMake sure you've formatted the card");
+    #endif
     while (1);
   }
 }
@@ -172,12 +177,12 @@ void vSDCardSetParmLoad( )
 
     String cc = strSetDate.substring(0, 1); delay(10);
     static_IP = (uint8_t)strtoul( cc.c_str(), NULL, 10); delay(10);
+    #ifdef DEBUG_SDCARD
     Serial.println(static_IP);
-
+#endif
 
     if (static_IP == 1)
     {
-      Serial.println("test");
       uint16_t offset = 2;        uint16_t end_offset;        String ip ;
       uint16_t offset1 = 0;        uint16_t end_offset1;   String ip1 ;
       //Serial.println(strSetDate);
@@ -186,6 +191,9 @@ void vSDCardSetParmLoad( )
       end_offset = strSetDate.indexOf("\n", offset);  ip = strSetDate.substring(offset, end_offset); ether.parseIp(maskip , (char*)ip.c_str()); offset = end_offset + 1;
       end_offset = strSetDate.indexOf("\n", offset);  ip = strSetDate.substring(offset, end_offset); ether.parseIp(gwip , (char*)ip.c_str()); offset = end_offset + 1;
       end_offset = strSetDate.indexOf("\n", offset);  ip = strSetDate.substring(offset, end_offset); ether.parseIp(dnsip , (char*)ip.c_str());
+
+     
+      
 
     }
 
@@ -215,10 +223,10 @@ void vSDCardSetParmLoad( )
       //edx = s0.indexOf("/",idx);     s1 = s0.substring(idx , edx + 1);         s1.toCharArray(strWebSite,edx + 1); idx =  edx; //Serial.print(website);
       //edx = s0.indexOf("\n",idx);  s1 = s0.substring(idx, edx + 1);   s1.toCharArray((suburl),edx + 1);   //Serial.println((suburl));
 
-      to = strSetDate.indexOf("\n", from);  s0 = strSetDate.substring(from, to); from = to + 1;	strWebSite = s0;	Serial.println(strWebSite);
+      to = strSetDate.indexOf("\n", from);  s0 = strSetDate.substring(from, to); from = to + 1;	strWebSite = s0;	//Serial.println(strWebSite);
       to = strSetDate.indexOf("\n", from);  s0 = strSetDate.substring(from, to); from = to + 1; strSubSyncUrl = strSubLogUrl = s0; //Serial.println(arrDeviceSerial);
-      to = strSetDate.indexOf("\n", from);  s0 = strSetDate.substring(from, to); from = to + 1; strSubSyncUrl += s0; Serial.println(strSubSyncUrl);
-      to = strSetDate.indexOf("\n", from);  s0 = strSetDate.substring(from, to); from = to + 1; strSubLogUrl += s0; Serial.println(strSubLogUrl);
+      to = strSetDate.indexOf("\n", from);  s0 = strSetDate.substring(from, to); from = to + 1; strSubSyncUrl += s0; //Serial.println(strSubSyncUrl);
+      to = strSetDate.indexOf("\n", from);  s0 = strSetDate.substring(from, to); from = to + 1; strSubLogUrl += s0; //Serial.println(strSubLogUrl);
 
       to = strSetDate.indexOf("\n", from);  s0 = strSetDate.substring(from, to); from = to + 1; strDeviceName = s0; //Serial.println(arrDeviceName);
       to = strSetDate.indexOf("\n", from);  s0 = strSetDate.substring(from, to); from = to + 1; strDeviceSerial = s0; //Serial.println(arrDeviceSerial);
@@ -253,7 +261,7 @@ void vSDCardLogData( )
   //String str_logData = strLogDate + "-" + strLogUID;
   String str_logData = "?log=" + strLogDate + "&rf=" + strLogUID;
   str_logData += "&dn=" + strDeviceName + "&ds=" + strDeviceSerial;
-  
+
   vSDCardFolder(str_logFolder);
 
   xSemaphoreTake( xBinarySemaphore, portMAX_DELAY );
@@ -390,7 +398,9 @@ void vSDCardUidDataLoad(uint8_t * uid )
       }
       myFile.close();
     }
-    Serial.println((const char*)strAuthUid.c_str());
+#ifdef DEBUG_SDCARD    
+Serial.println((const char*)strAuthUid.c_str());
+#endif
 
     //setEvent(&ActiveEvent , RFID_DONE);
   }
