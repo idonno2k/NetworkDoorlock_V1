@@ -7,6 +7,8 @@
 #include <SD.h>
 #include <RTClock.h>
 
+#include <libmaple/iwdg.h>
+
 RTClock rtclock (RTCSEL_LSE); // initialise
 //-----------------------------------------------------------------------------
 const char * weekdays[] = {"Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"};
@@ -46,6 +48,9 @@ static uint32_t RelayOntime = 0;
 
 xSemaphoreHandle xBinarySemaphore = NULL;
 
+//TaskHandle_t Task2;  
+//TaskHandle_t Task3; 
+
 void setup()
 {
 #ifdef DEBUG
@@ -67,17 +72,20 @@ void setup()
   pinMode(BUZZ_PIN, OUTPUT);    delay(100);//buzzer
   pinMode(FIRE_PIN, INPUT);    delay(100);//fire alert
 
-  xTaskCreate(vLEDFlashTask, "Task1", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 2,  NULL);
-  xTaskCreate(vEn28j60TaskLoop, "Task2", configMINIMAL_STACK_SIZE + 512, NULL, tskIDLE_PRIORITY + 2,  NULL);
-  xTaskCreate(vPN532TaskLoop, "Task3", configMINIMAL_STACK_SIZE + 512  , NULL, tskIDLE_PRIORITY + 2,  NULL);
-  //xTaskCreate(vPacketReceiveLoop, "Task4", configMINIMAL_STACK_SIZE+512  , NULL, tskIDLE_PRIORITY + 2,  NULL);
+iwdg_init(IWDG_PRE_256, 1560);//10s
 
-  vTaskStartScheduler();
+  xTaskCreate(vLEDFlashTask, "Task1", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 2,  NULL);
+  xTaskCreate(vEn28j60TaskLoop, "Task2", configMINIMAL_STACK_SIZE + 512, NULL, tskIDLE_PRIORITY + 1, NULL);
+  xTaskCreate(vPN532TaskLoop, "Task3", configMINIMAL_STACK_SIZE +512 , NULL, tskIDLE_PRIORITY + 2,  NULL);
+   vTaskStartScheduler();
+
+   Serial.println(F("Die"));  
 }
 
 void loop()
 {
   // Insert background code here
+
 }
 
 static void vLEDFlashTask(void *pvParameters)
@@ -86,10 +94,17 @@ static void vLEDFlashTask(void *pvParameters)
   {
     vTaskDelay(50);      digitalWrite(LED1_PIN, HIGH);
     vTaskDelay(50);      digitalWrite(LED1_PIN, LOW);
-    vTaskDelay(50);      digitalWrite(LED2_PIN, HIGH);
-    vTaskDelay(50);      digitalWrite(LED2_PIN, LOW);
-    //vTaskDelay(300);
+    vTaskDelay(50);      digitalWrite(LED1_PIN, HIGH);
+    vTaskDelay(50);      digitalWrite(LED1_PIN, LOW);
+    vTaskDelay(300);
     vEventTask();
+
+iwdg_feed();
+
+   // Serial.print(F("vEn28j60TaskLoop stack"));  
+   // Serial.print(uxTaskGetStackHighWaterMark(Task2));//blink 태스크의 남은 스택 크기 출력  
+   // Serial.print('/');  
+   // Serial.print(configMINIMAL_STACK_SIZE + 512); //blink 태스크 생성시 스택 크기  
   }
 }
 
@@ -101,12 +116,12 @@ void vEventTask(void)
   if ((ActiveEvent & RFID_DONE) == RFID_DONE)
   {
     clearEvent(&ActiveEvent , RFID_DONE);
-    digitalWrite(RELAY_PIN, HIGH);  digitalWrite(LED2_PIN, HIGH);
+    digitalWrite(RELAY_PIN, HIGH);  
     vTaskDelay(RelayONTime);
-    digitalWrite(RELAY_PIN, LOW);   digitalWrite(LED2_PIN, LOW);
+    digitalWrite(RELAY_PIN, LOW);   
 
 #ifdef DEBUG
-    Serial.print("-");
+   Serial.print("RelayON");
 #endif
   }
   else if ((ActiveEvent & FIRE_ON) == FIRE_ON)
@@ -121,7 +136,7 @@ void vEventTask(void)
   {
     digitalWrite(RELAY_PIN, LOW);
 #ifdef DEBUG
-    Serial.print("_");
+    //Serial.print("_");
 #endif
   }
 

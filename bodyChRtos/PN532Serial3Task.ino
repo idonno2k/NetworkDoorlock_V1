@@ -56,7 +56,7 @@ void vPN532Serial3Task(void)
   //rfid loop 500ms
   //if (millis() > RfidTimer)
   {
-    digitalWrite(LED1_PIN, LOW);
+    digitalWrite(LED1_PIN, HIGH);
     success = nfc.readPassiveTargetID(PN532_MIFARE_ISO14443A, &uid[0], &uidLength, 50);
     //uid[0]=0x89;
     //uid[1]=0xAB;
@@ -114,14 +114,14 @@ void vPN532Serial3Task(void)
 #ifdef DEBUG_PN532
     //Serial.print(".");
 #endif
-    digitalWrite(LED1_PIN, HIGH);
+    digitalWrite(LED1_PIN, LOW);
   }                 // wait for a second
 
 }
 
 static void vPN532TaskLoop(void *pvParameters)
 {
-
+  digitalWrite(LED1_PIN, HIGH);
   vPN532Serial3Task_setup();
   vTaskDelay(100);
 
@@ -129,6 +129,7 @@ static void vPN532TaskLoop(void *pvParameters)
   {
     vPN532Serial3Task();
     vTaskDelay(500);
+    Serial.print(".");
   }
 }
 

@@ -146,9 +146,9 @@ void vEnc28j60spi1Task(void)
     {
       if (LogStep == 0)
       {
-        File log_dir = SD.open("/LOG/");
-
         xSemaphoreTake( xBinarySemaphore, portMAX_DELAY );
+        File log_dir = SD.open("/LOG/");
+   
         File entry =  log_dir.openNextFile();
         if (! entry)
         {
@@ -249,11 +249,11 @@ void vEnc28j60spi1Task(void)
     {
       EtherStep = SyncInit;
       EthernetTimer = millis() + 300;
-      //EthernetTimer = millis() + 3000;
-
     }
 
   }
+
+
 
 }
 
@@ -303,10 +303,12 @@ static void SyncData_callback (byte status, uint16_t off, uint16_t len)
 {
   digitalWrite(LED2_PIN, HIGH);
   Ethernet::buffer[off + len] = 0;
-
+  
+ Serial.print("SyncData_callback->");
+ 
   char *ptr = strstr((const char*) Ethernet::buffer + off, "[[S]]");
 #ifdef DEBUG_ENC28J60
-  Serial.print((const char*)ptr); Serial.println("");
+  Serial.print((const char*)ptr); Serial.print("");
 #endif
   ptr = ptr + 5;
   ptr = strtok(ptr, ">");
@@ -352,10 +354,9 @@ static void SyncData_callback (byte status, uint16_t off, uint16_t len)
       sDateNum = 0;
       EtherStep = SyncLogPush;
 #ifdef DEBUG_ENC28J60
-      Serial.println("SyncData finished");
+      Serial.println("->SyncData finished");
 #endif
       vSDCardSyncDate( strSyncDateNew );
-      //vSDCardSyncDate( "20181201000000" );
     }
 
   }
@@ -413,7 +414,7 @@ static void log_callback (byte status, uint16_t off, uint16_t len)
 {
   Ethernet::buffer[off + len] = 0;
 
-  //Serial.print("log_callback");
+  Serial.print("log_callback->");
 
   String rs = "n";
   rs = (const char*) Ethernet::buffer + off + len - 1;
