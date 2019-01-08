@@ -7,6 +7,8 @@
 #include <SD.h>
 #include <RTClock.h>
 
+#include <libmaple/iwdg.h>
+
 RTClock rtclock (RTCSEL_LSE); // initialise
 //-----------------------------------------------------------------------------
 const char * weekdays[] = {"Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"};
@@ -97,7 +99,8 @@ void setup()
     vEnc28j60spi1Task_setup();      delay(100);
 
     rtc_setup();                    delay(100);
-
+    iwdg_init(IWDG_PRE_256, 1560);
+    
     pinMode(LED2_PIN, OUTPUT);    digitalWrite(LED2_PIN, LOW);delay(100);//led
     pinMode(RELAY_PIN, OUTPUT);    digitalWrite(RELAY_PIN, LOW);delay(100);//relay
     pinMode(BUZZ_PIN, OUTPUT);    delay(100);//buzzer
@@ -109,6 +112,7 @@ void setup()
 // the loop function runs over and over again forever
 void loop() 
 {
+  
 	vEnc28j60spi1Task();
 
 	vPN532Serial3Task(); 
@@ -116,15 +120,15 @@ void loop()
 	vRTCTask();
 
 	vEventTask(); 
+  iwdg_feed();
+  
 }
 
-
-
-void setEvent(uint8_t* event ,uint8_t event_code)
+void setEvent(uint8_t* event , uint8_t event_code)
 {
   *event = *event | event_code;
 }
-void clearEvent(uint8_t* event ,uint8_t event_code)
+void clearEvent(uint8_t* event , uint8_t event_code)
 {
   *event = *event  & ~event_code;
- }
+}

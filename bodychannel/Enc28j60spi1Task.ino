@@ -12,6 +12,7 @@ enum etherState
 etherState EtherStep = SyncIdle;
 
 uint8_t LogAckFlag = false;
+uint8_t LogAckFlag1 = false;
 
 static uint32_t EthernetTimer;
 uint32_t LogTimeOut;
@@ -29,6 +30,8 @@ static String strSubLogUrl = "";
 static String strSubSyncUrl = "";
 static String strDeviceName  = "67CU65SU7LGE64SQIOuNsOuqqA==";
 static String strDeviceSerial = "2000";
+
+String strLogUID;
 
 #define BUFFER_SIZE 2048
 byte Ethernet::buffer[BUFFER_SIZE];
@@ -80,6 +83,11 @@ uint16_t sNo = 0;
 uint16_t sCnt = 0;
 uint16_t sDateNum=0; 
 char paramStr[150]; 
+uint8_t LogStep = 0;
+uint16_t from = 0;
+
+String strLogFilename;
+
 void vEnc28j60spi1Task(void) 
 {
 	ether.packetLoop(ether.packetReceive());
@@ -117,16 +125,107 @@ void vEnc28j60spi1Task(void)
 		}
 		else if(EtherStep == SyncLogPush)
 		{
+			 if (LogStep == 0)
+			 {
+				File log_dir = SD.open("/LOG/");
+		   
+				File entry =  log_dir.openNextFile();
+				if (! entry)
+				{
+#ifdef DEBUG_ENC28J60
+				  Serial.println("No more logfiles...");
+#endif
+				  entry.close();
+				  EtherStep = SyncIdle;
+				  LogStep = 0;
+				  EthernetTimer = millis() + 300000;
+				}
+				else
+				{
+				  //Serial.print(entry.name());
+				  strLogFilename = entry.name();
+				  if (!entry.isDirectory())
+				  {
+#ifdef DEBUG_ENC28J60
+					Serial.println(strLogFilename);
+#endif
+					File myFile = SD.open("/LOG/" + strLogFilename);
+					strLogDate = "";
+					if (myFile)
+					{
+					  // read from the file until there's nothing else in it:
+					  while (myFile.available())
+					  {
+						char tmpchar = (char)(myFile.read());
+						if (tmpchar != '\r')
+						  strLogDate += tmpchar;
+					  }
+					  myFile.close();
+					}
+		
+				  }
+				  entry.close();
+				  LogStep = 1;
+				  from = 0;
+				}
+			  }
+			  else if (LogStep == 1)
+			  {
+				String s0 = "";
+				uint16_t to;
+		
+				to = strLogDate.indexOf("\n", from);  s0 = strLogDate.substring(from, to); from = to + 1;
 
-			etherLogPush();
-			EtherStep = SyncIdle;
+				if (s0 == "")
+				{
 
- 			EthernetTimer = millis() + 300; 
+#ifdef DEBUG_ENC28J60
+				  Serial.println("no more string");
+#endif
+				  SD.remove("/LOG/" + strLogFilename);
+				  LogStep = 0;
+				}
+				else
+				{
+#ifdef DEBUG_ENC28J60
+				  Serial.print("log push -> "); Serial.print(s0);
+#endif
+				  //Serial.println((const char*)strSubLogUrl.c_str());
+				  //Serial.println((const char*)s0.c_str());
+				  ether.browseUrl((const char*)strSubLogUrl.c_str(), (const char*)s0.c_str(), (const char*)strWebSite.c_str(), log_callback);
+				  LogAckFlag1 = true;
+				  LogStep = 3;
+				  EthernetTimer = millis() + 300;//wait callback
+				}
+		
+			  }
+			  else
+			  {
+				if (LogAckFlag1 == true) //timeout
+				{
+				  LogStep = 0;
+				  EtherStep = SyncIdle;
+				  EthernetTimer = millis() + 300000;
+#ifdef DEBUG_ENC28J60
+				  Serial.println(" -> timeout");
+#endif
+		
+				}
+				else//ok next log
+				{
+#ifdef DEBUG_ENC28J60
+				  Serial.println(" -> ok");
+#endif
+				  LogStep = 1;
+				}
+			  }
+		
+		
 		}
 		else //idle
 		{
 			EtherStep = SyncInit;
-			EthernetTimer = millis() + 300000;
+			EthernetTimer = millis() + 300;
 
 		}
 
@@ -160,11 +259,16 @@ static void SyncInit_callback (byte status, uint16_t off, uint16_t len)
 	Serial.println("");
 #endif
 
-  RtcTimeSet(strSyncDateNew);  
-  if(sDateNum == 0)
-    EtherStep = SyncIdle;
-  
-	EthernetTimer = millis() + 100;
+  RtcTimeSet(strSyncDateNew);
+
+  if (sDateNum < sCntMax)
+    sCnt = sDateNum;
+
+  if (sDateNum == 0)
+  {
+    EtherStep = SyncLogPush;
+  }
+  EthernetTimer = millis() + 100;
 }
 
 typedef struct _UID {   // 구조체 이름은 _Person
@@ -251,7 +355,8 @@ static void SyncData_callback (byte status, uint16_t off, uint16_t len)
 				sDateNum = 0;
 				EtherStep = SyncLogPush;
 				Serial.println("SyncData finished");
-				vSDCardSyncDate( strSyncDateNew );       
+				vSDCardSyncDate( strSyncDateNew );      
+        //vSDCardSyncDate( "20181201000000" );       
 			}
 
 		}
@@ -263,34 +368,33 @@ static void SyncData_callback (byte status, uint16_t off, uint16_t len)
 }
 
 
-//String strLogDate; 
-String strLogUID; 
-void etherLogData(uint8_t * uid ) 
+
+void etherLogData( )
 {
-	char arr_logdata[128]; 
-	char arr_loguid[20]; 
-	char arr_logfilename[128]; 
+  //char arr_logdata[128];
+  //char arr_loguid[20];
+  //char arr_logfilename[128];
 
-	rtclock.breakTime(rtclock.now(), logTimeStamp);
+  //rtclock.breakTime(rtclock.now(), logTimeStamp);
 
-	//sprintf(arr_logdata, "%s %u %u, %s, %02u:%02u:%02u : ", months[logTimeStamp.month], logTimeStamp.day, logTimeStamp.year+1970, weekdays[logTimeStamp.weekday], logTimeStamp.hour, logTimeStamp.minute, logTimeStamp.second);
-	sprintf(arr_logdata, "%u%u%u%02u%02u%02u",  logTimeStamp.year+1970, logTimeStamp.month, logTimeStamp.day,logTimeStamp.hour, logTimeStamp.minute, logTimeStamp.second);
-	sprintf(arr_loguid, "%02X%02X%02X%02X", uid[0],uid[1],uid[2],uid[3]);
+  //sprintf(arr_logdata, "%s %u %u, %s, %02u:%02u:%02u : ", months[logTimeStamp.month], logTimeStamp.day, logTimeStamp.year+1970, weekdays[logTimeStamp.weekday], logTimeStamp.hour, logTimeStamp.minute, logTimeStamp.second);
+  //sprintf(arr_logdata, "%u%u%u%02u%02u%02u",  logTimeStamp.year+1970, logTimeStamp.month, logTimeStamp.day,logTimeStamp.hour, logTimeStamp.minute, logTimeStamp.second);
+  //sprintf(arr_loguid, "%02X%02X%02X%02X", uid[0],uid[1],uid[2],uid[3]);
 
-	strLogDate = arr_logdata;
-	strLogUID = arr_loguid;
+  //strLogDate = arr_logdata;
+  //strLogUID = arr_loguid;
 
-	String str_logData = strLogDate + "-" + strLogUID;
+  String str_logData = "?log=" + strLogDate + "&rf=" + strLogUID;
+  str_logData += "&dn=" + strDeviceName + "&ds=" + strDeviceSerial;
 
-	//const char *cstr = str_logData.c_str();
-	//sprintf(paramStr,"?%s", cstr);
-	ether.browseUrl((const char*)strSubLogUrl.c_str(), (const char*)str_logData.c_str(), (const char*)strWebSite.c_str(), log_callback);
+  //const char *cstr = str_logData.c_str();
+  //sprintf(paramStr,"?%s", cstr);
 
-	LogAckFlag = true;
 
-	LogTimeOut = millis() + 500;
+  ether.browseUrl((const char*)strSubLogUrl.c_str(), (const char*)str_logData.c_str(), (const char*)strWebSite.c_str(), log_callback);
 
 }
+
 
 void etherLogPush()
 {
@@ -352,6 +456,20 @@ static void log_callback (byte status, uint16_t off, uint16_t len)
 {
 	Ethernet::buffer[off+len] = 0;
 
+  String rs = "n";
+  rs = (const char*) Ethernet::buffer + off + len - 1;
+
+  Serial.println("log_callback=>"+rs);
+  
+  if (rs == "y") {
+    LogAckFlag1 = false;
+    LogAckFlag = false;
+  } else {
+    LogAckFlag1 = true;
+    LogAckFlag = true;
+  }
+  
+  /*
 	//Serial.print("log_callback");
 
 	char *ptr = strstr((const char*) Ethernet::buffer + off, "[[S]]");  
@@ -367,5 +485,7 @@ static void log_callback (byte status, uint16_t off, uint16_t len)
 #endif
 
 	LogAckFlag = false;
+ */
+ 
 }
 #endif  

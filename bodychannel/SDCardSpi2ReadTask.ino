@@ -257,37 +257,40 @@ void vSDCardSetParmLoad( )
 
 
 
-void vSDCardLogData( ) 
+void vSDCardLogData( )
 {
-	if(LogAckFlag == true)
-	{
-		//char arr_logdata[128]; 
-		//char arr_loguid[20]; 
-		//char arr_logfilename[128]; 
 
-		//rtclock.breakTime(rtclock.now(), TimeStamp);
-		//sprintf(arr_logfilename, "log_%u%u%u",logTimeStamp.year+1970, logTimeStamp.month, logTimeStamp.day, logTimeStamp.hour);
-		//sprintf(arr_logdata, "%s %u %u, %s, %02u:%02u:%02u : ", months[logTimeStamp.month], logTimeStamp.day, logTimeStamp.year+1970,
-		//	                                                  weekdays[logTimeStamp.weekday], logTimeStamp.hour, logTimeStamp.minute, logTimeStamp.second);
-		//sprintf(arr_loguid, "%02X%02X%02X%02X", uid[0],uid[1],uid[2],uid[3]);
+  //char arr_logdata[128];
+  //char arr_loguid[20];
+  //char arr_logfilename[128];
 
-		String str_logFolder = "LOG";
-		//String str_logFile = strLogDate;
-		String str_logFile = strLogDate.substring(8,14);
-		String str_logData = strLogDate + "-" + strLogUID;
+  //rtclock.breakTime(rtclock.now(), TimeStamp);
+  //sprintf(arr_logfilename, "log_%u%u%u",logTimeStamp.year+1970, logTimeStamp.month, logTimeStamp.day, logTimeStamp.hour);
+  //sprintf(arr_logdata, "%s %u %u, %s, %02u:%02u:%02u : ", months[logTimeStamp.month], logTimeStamp.day, logTimeStamp.year+1970,
+  //	                                                  weekdays[logTimeStamp.weekday], logTimeStamp.hour, logTimeStamp.minute, logTimeStamp.second);
+  //sprintf(arr_loguid, "%02X%02X%02X%02X", uid[0],uid[1],uid[2],uid[3]);
 
-		vSDCardFolder(str_logFolder);
+  String str_logFolder = "LOG";
+  //String str_logFile = strLogDate;
+  String str_logFile = strLogDate.substring(8, 14);
+  //String str_logData = strLogDate + "-" + strLogUID;
+  String str_logData = "?log=" + strLogDate + "&rf=" + strLogUID;
+  str_logData += "&dn=" + strDeviceName + "&ds=" + strDeviceSerial;
 
-		File myFile;
-		myFile = SD.open(str_logFolder +"/"+str_logFile, FILE_WRITE);
-		myFile.seek(myFile.size());
-		myFile.print(str_logData.c_str());
-		myFile.close();
+  //Serial.println(str_logData);
+  
+  vSDCardFolder(str_logFolder);
 
-		LogAckFlag = false;
-	}
+  //Serial.println(str_logFolder +"/"+ str_logFile);
+  File myFile;
+  myFile = SD.open(str_logFolder + "/" + str_logFile, FILE_WRITE);
+  myFile.seek(myFile.size());
+  myFile.println(str_logData.c_str());
+  myFile.close();
+
 
 }
+
 
 
 void vSDCardLogRead(String logPath ) 

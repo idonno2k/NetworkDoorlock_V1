@@ -67,32 +67,51 @@ void vPN532Serial3Task(void)
 			Serial.println("");
 		#endif
 
-		#ifdef DEBUG_PN532
-			// Serial.print(rfid_event, HEX);
-		#endif
-
+			rtclock.breakTime(rtclock.now(), logTimeStamp);
 			vSDCardUidDataLoad(uid) ;
-			etherLogData( uid ) ;
 
+			char arr_logdata[20];
+			char arr_loguid[10];
+			
+			sprintf(arr_logdata, "%u%02u%02u%02u%02u%02u",	logTimeStamp.year + 1970, logTimeStamp.month, logTimeStamp.day, logTimeStamp.hour, logTimeStamp.minute, logTimeStamp.second);
+			sprintf(arr_loguid, "%02X%02X%02X%02X", uid[0], uid[1], uid[2], uid[3]);
+			
+			strLogDate = arr_logdata;
+			strLogUID = arr_loguid;
+
+      LogAckFlag = true;
+      
+			if (EtherStep == SyncIdle)
+			{
+      
+			  etherLogData( ) ;
+        
+			 // vTaskDelay(500);//wait log_callback timeout
+			  LogTimeOut = millis() + 300;
+			}
 
 		}
 		else
 		{
-		  #ifdef DEBUG_PN532
+#ifdef DEBUG_PN532
 		  // PN532 probably timed out waiting for a card
 		  //Serial.println("Timed out waiting for a card");
-		  #endif
+#endif
 		}
-	 #ifdef DEBUG_PN532
+#ifdef DEBUG_PN532
 		//Serial.print(".");
 #endif
-	RfidTimer = millis() + 1000;
+		RfidTimer = millis() + 1000;
 	}                 // wait for a second
 
 
 	if (millis() > LogTimeOut) 
 	{
-		vSDCardLogData() ;
+		if (LogAckFlag == true)
+		{    
+			vSDCardLogData() ;
+			LogAckFlag = false;
+		}
 	}
 
 
