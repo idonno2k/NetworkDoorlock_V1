@@ -120,7 +120,7 @@ void loop()
 	vRTCTask();
 
 	vEventTask(); 
-  iwdg_feed();
+  //iwdg_feed();
   
 }
 

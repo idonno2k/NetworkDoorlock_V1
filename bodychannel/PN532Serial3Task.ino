@@ -42,6 +42,9 @@ void vPN532Serial3Task_setup(void)
 
 void vPN532Serial3Task(void) 
 {
+    digitalWrite(LED2_PIN, HIGH);
+    iwdg_feed();
+    
     boolean success;
     static uint8_t uid[] = { 0, 0, 0, 0, 0, 0, 0 };  // Buffer to store the returned UID
     uint8_t uidLength;                        // Length of the UID (4 or 7 bytes depending on ISO14443A card type)
@@ -114,7 +117,7 @@ void vPN532Serial3Task(void)
 		}
 	}
 
-
+  digitalWrite(LED2_PIN, LOW);
   
 }
 
