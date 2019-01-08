@@ -203,13 +203,13 @@ void vEnc28j60spi1Task(void)
 			  {
 				if (LogAckFlag1 == true) //timeout
 				{
-				  LogStep = 0;
-				  EtherStep = SyncIdle;
-				  EthernetTimer = millis() + 300000;
+					LogAckFlag1 = false;
+					LogStep = 0;
+					EtherStep = SyncIdle;
+					EthernetTimer = millis() + 300000;
 #ifdef DEBUG_ENC28J60
-				  Serial.println(" -> timeout");
+					Serial.println(" -> timeout");
 #endif
-		
 				}
 				else//ok next log
 				{
@@ -463,14 +463,16 @@ static void log_callback (byte status, uint16_t off, uint16_t len)
   rs = (const char*) Ethernet::buffer + off + len - 1;
 
   Serial.println("log_callback=>"+rs);
-  
-  if (rs == "y") {
-    LogAckFlag1 = false;
-    LogAckFlag = false;
-  } else {
-    LogAckFlag1 = true;
-    LogAckFlag = true;
-  }
+
+
+	if (rs == "y") 
+	{
+		if(LogAckFlag == true)LogAckFlag = false;
+			
+		if(LogAckFlag1 == true)LogAckFlag1 = false;
+	}
+
+
   
   /*
 	//Serial.print("log_callback");

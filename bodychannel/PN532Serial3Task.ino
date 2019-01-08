@@ -82,7 +82,7 @@ void vPN532Serial3Task(void)
 			strLogDate = arr_logdata;
 			strLogUID = arr_loguid;
 
-      LogAckFlag = true;
+      		LogAckFlag = true;
       
 			if (EtherStep == SyncIdle)
 			{
