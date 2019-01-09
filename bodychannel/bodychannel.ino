@@ -1,6 +1,7 @@
 #define DEBUG
 #define ENC28J60_ENABLE
-#define PN532_ENABLE
+//#define PN532_ENABLE
+#define P08I_ENABLE
 #define SDCARD_ENABLE
 
 #include <SPI.h>
@@ -8,6 +9,9 @@
 #include <RTClock.h>
 
 #include <libmaple/iwdg.h>
+
+
+
 
 RTClock rtclock (RTCSEL_LSE); // initialise
 //-----------------------------------------------------------------------------
@@ -100,7 +104,13 @@ void setup()
   vSDCardSyncDateLoad();          delay(100);
   vSDCardSetParmLoad() ;          delay(100);
 
+#ifdef PN532_ENABLE
   vPN532Serial3Task_setup();      delay(100);
+#endif
+#ifdef P08I_ENABLE
+  vSerial3Task_setup();      delay(100);
+#endif
+
   vEnc28j60spi1Task_setup();      delay(100);
 
   rtc_setup();                    delay(100);
@@ -122,7 +132,13 @@ void loop()
 {
 
   vEnc28j60spi1Task();
+#ifdef PN532_ENABLE
   vPN532Serial3Task();
+#endif
+#ifdef P08I_ENABLE
+  vSerial3Task();
+#endif
+
   vRTCTask();
   vEventTask();
   //iwdg_feed();

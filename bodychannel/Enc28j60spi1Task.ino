@@ -336,7 +336,13 @@ static void SyncData_callback (byte status, uint16_t off, uint16_t len)
       vSDCardFolder(folder01 + "/" + folder02);
       vSDCardFile(folder01 + "/" + folder02 + "/" + folderFile , FileState);
       digitalWrite(LED1_PIN, LOW);
+#ifdef PN532_ENABLE
       vPN532Serial3Task();
+#endif
+#ifdef P08I_ENABLE
+      vSerial3Task();
+#endif
+
       vEventTask();
 
     }
