@@ -99,7 +99,7 @@ uint16_t loopCnt;
 uint16_t sNo = 0;
 uint16_t sCnt = 0;
 uint16_t sDateNum = 0;
-char paramStr[150];
+char paramStr[250];
 uint8_t LogStep = 0;
 uint16_t from = 0;
 
@@ -115,7 +115,7 @@ void vEnc28j60spi1Task(void)
     {
       vSDCardSyncDateLoad( ) ;
       const char *cstr = strSyncDate.c_str();
-      sprintf(paramStr, "?SyncType=1&SyncDate=%s", cstr);
+      sprintf(paramStr, "?SyncType=1&SyncDate=%s&dn=%s&ds=%s", cstr, (const char*)strDeviceName.c_str(), (const char*)strDeviceSerial.c_str());
 
 #ifdef DEBUG_ENC28J60
       //Serial.println((const char*)paramStr);
@@ -132,7 +132,7 @@ void vEnc28j60spi1Task(void)
     else if (EtherStep == SyncData)
     {
       const char *cstr = strSyncDate.c_str();
-      sprintf(paramStr, "?sNo=%d&sCount=%d&SyncDate=%s", sNo, sCnt, cstr);
+      sprintf(paramStr, "?sNo=%d&sCount=%d&SyncDate=%s&dn=%s&ds=%s", sNo, sCnt, cstr, (const char*)strDeviceName.c_str(), (const char*)strDeviceSerial.c_str());
 #ifdef DEBUG_ENC28J60
       //Serial.println((const char*)paramStr);
       Serial.print(strWebSite); Serial.print(strSubSyncUrl); Serial.println(paramStr);

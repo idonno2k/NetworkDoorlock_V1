@@ -1,7 +1,7 @@
 #define DEBUG
 #define ENC28J60_ENABLE
-//#define PN532_ENABLE
-#define P08I_ENABLE
+#define PN532_ENABLE
+//#define P08I_ENABLE
 #define SDCARD_ENABLE
 
 #include <SPI.h>
