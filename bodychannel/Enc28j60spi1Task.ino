@@ -99,7 +99,7 @@ uint16_t loopCnt;
 uint16_t sNo = 0;
 uint16_t sCnt = 0;
 uint16_t sDateNum = 0;
-char paramStr[250];
+char paramStr[300];
 uint8_t LogStep = 0;
 uint16_t from = 0;
 
